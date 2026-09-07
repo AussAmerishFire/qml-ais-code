@@ -1,0 +1,47 @@
+{
+  "rule": {
+    "val_auc": 0.7494,
+    "params": {
+      "feature": "spd_mismatch_max"
+    }
+  },
+  "iforest": {
+    "val_auc": 0.8269,
+    "params": {
+      "n_estimators": 200,
+      "max_samples": 1024,
+      "contamination": 0.02
+    }
+  },
+  "logreg": {
+    "val_auc": 0.8306,
+    "params": {
+      "C": 0.01,
+      "class_weight": null
+    }
+  },
+  "gbt": {
+    "val_auc": 0.8216,
+    "params": {
+      "max_iter": 100,
+      "max_depth": 3,
+      "learning_rate": 0.05
+    }
+  },
+  "rf": {
+    "val_auc": 0.8659,
+    "params": {
+      "n_estimators": 300,
+      "max_depth": 6,
+      "class_weight": null
+    }
+  },
+  "mlp": {
+    "val_auc": 0.8441162013826519,
+    "params": {
+      "alpha": 0.01,
+      "lr": 0.01,
+      "oversample": 0.35
+    }
+  }
+}

@@ -1,0 +1,80 @@
+[
+  {
+    "arch": "A_vqc",
+    "T": 50,
+    "mlp_h": 5,
+    "mlp_T": 51,
+    "q_auc": 0.7968907472536899,
+    "q_std": 0.0010691272790470108,
+    "c_auc": 0.8281848174529154,
+    "c_std": 0.014368736752683242,
+    "epochs": 60,
+    "secs": 652.4568064212799,
+    "note": "pure VQC, summed readout -- what 12_qnn.py built. NOT hybrid."
+  },
+  {
+    "arch": "B_post",
+    "T": 57,
+    "mlp_h": 6,
+    "mlp_T": 61,
+    "q_auc": 0.8103367875303973,
+    "q_std": 0.0035591142644496587,
+    "c_auc": 0.8439698811351135,
+    "c_std": 0.016109820559525978,
+    "epochs": 60,
+    "secs": 758.40332198143,
+    "note": "hybrid: trainable classical layer over the 8 measured qubits"
+  },
+  {
+    "arch": "C_pre",
+    "T": 122,
+    "mlp_h": 13,
+    "mlp_T": 131,
+    "q_auc": 0.8456007963536132,
+    "q_std": 0.003119656021937811,
+    "c_auc": 0.829669412423877,
+    "c_std": 0.01695855538412072,
+    "epochs": 57,
+    "secs": 868.1858866214752,
+    "note": "hybrid: classical layer feeds the circuit"
+  },
+  {
+    "arch": "D_both",
+    "T": 129,
+    "mlp_h": 13,
+    "mlp_T": 131,
+    "q_auc": 0.8217505960048769,
+    "q_std": 0.008427150758388846,
+    "c_auc": 0.829669412423877,
+    "c_std": 0.01695855538412072,
+    "epochs": 24,
+    "secs": 427.6754217147827,
+    "note": "full hybrid: classical -> quantum -> classical, end to end"
+  },
+  {
+    "arch": "E_reup",
+    "T": 57,
+    "mlp_h": 6,
+    "mlp_T": 61,
+    "q_auc": 0.8343245742395881,
+    "q_std": 0.0009403853612093283,
+    "c_auc": 0.8439698811351135,
+    "c_std": 0.016109820559525978,
+    "epochs": 59,
+    "secs": 696.2534260749817,
+    "note": "hybrid + data re-uploading (same T as B, more expressive)"
+  },
+  {
+    "arch": "F_deep",
+    "T": 105,
+    "mlp_h": 11,
+    "mlp_T": 111,
+    "q_auc": 0.8186244172065094,
+    "q_std": 0.00808907193936953,
+    "c_auc": 0.8187908861998835,
+    "c_std": 0.023629227477737325,
+    "epochs": 49,
+    "secs": 5806.941623210907,
+    "note": "deeper circuit, L=4 -- doubles the quantum parameter count"
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "control": "C_pre (quantum, as screened)",
+    "params": 122,
+    "auc": 0.8356563261865814,
+    "std": 0.020824301744650595,
+    "note": ""
+  },
+  {
+    "control": "  circuit FROZEN (random gates)",
+    "params": 74,
+    "auc": 0.8270177011200456,
+    "std": 0.017316776503603606,
+    "note": ""
+  },
+  {
+    "control": "  circuit REMOVED entirely",
+    "params": 74,
+    "auc": 0.5,
+    "std": 0.0,
+    "note": ""
+  },
+  {
+    "control": "MLP (8, 5) \u2014 2 hidden layers",
+    "params": 123,
+    "auc": 0.8388502202487323,
+    "std": 0.015917689635357276,
+    "note": ""
+  },
+  {
+    "control": "MLP (13,) \u2014 1 hidden layer",
+    "params": 131,
+    "auc": 0.8313337891169429,
+    "std": 0.014045237628120358,
+    "note": ""
+  },
+  {
+    "control": "MLP (5,) \u2014 1 hidden layer",
+    "params": 51,
+    "auc": 0.8359126307632415,
+    "std": 0.01603367064535683,
+    "note": ""
+  }
+]

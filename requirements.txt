@@ -1,0 +1,27 @@
+# Python 3.13.9
+#
+# Versions are PINNED, not ranged. Two of these pins are load-bearing and will
+# silently break the project if relaxed:
+#
+#   jax==0.10.2 / jaxlib==0.10.2
+#       PennyLane 0.45.1 calls jax.core.is_concrete, which was DEPRECATED in
+#       JAX 0.10.0 and REMOVED in 0.11.0. Installing any jax >= 0.11 makes every
+#       quantum model raise AttributeError at the first circuit evaluation.
+#       If you upgrade PennyLane, re-test before lifting this pin.
+#
+#   pennylane==0.45.1
+#       Paired with the jax pin above. Upgrading one requires re-testing both.
+#
+# Everything else is pinned for reproducibility of the reported numbers rather
+# than for compatibility.
+
+numpy==2.5.2
+pandas==3.0.5
+scipy==1.18.1
+scikit-learn==1.9.0
+matplotlib==3.11.1
+
+pennylane==0.45.1
+jax==0.10.2
+jaxlib==0.10.2
+optax==0.2.8
