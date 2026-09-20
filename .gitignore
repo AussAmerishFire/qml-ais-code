@@ -1,23 +1,15 @@
 # ---------------------------------------------------------------------------
-# Everything in this project is committed EXCEPT the raw AIS downloads, which
-# GitHub cannot take: its hard limit is 100 MB per file and these are 836 MB,
-# 304 MB, 124 MB and 103 MB. They are unmodified public-domain US federal data
-# from https://marinecadastre.gov/ais/ (date 2023-01-01). Re-download and run
-# PIPELINE.py to regenerate everything downstream; the built datasets are
-# committed, so no experiment here needs the raw file.
+# Everything in this project is committed EXCEPT the raw AIS downloads in
+# data/raw/, which GitHub cannot take: its hard limit is 100 MB per file and
+# these run to 836 MB. They are unmodified public-domain US federal data from
+# https://marinecadastre.gov/ais/ (date 2023-01-01). Re-download into data/raw/
+# and run scripts/PIPELINE.py to regenerate everything downstream; the built
+# datasets in data/ are committed, so no experiment here needs the raw file.
 #
-# Intermediates (windows_*.csv), superseded datasets (old8_*.csv), run logs and
-# saved kernel matrices ARE committed. They are the experimental record.
+# Intermediates (data/windows_*.csv), superseded datasets (data/old8_*.csv),
+# run logs and saved kernel matrices ARE committed: they are the record.
 # ---------------------------------------------------------------------------
-AIS_2023_01_01.csv
-AIS_RAW_first_1M.csv
-AIS_zone11_RAW_first_1M.csv
-AIS_sample_50k.csv
-AIS_20vessel_tracks.csv
-*.zip
-zones/
-zone2015/
-**/AIS_ASCII_by_UTM_Month/
+data/raw/
 
 # Python environment -- regenerated from requirements.txt
 .venv/
