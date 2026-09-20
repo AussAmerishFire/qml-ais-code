@@ -56,10 +56,10 @@ MAX_EPOCHS = 60
 PATIENCE = 10
 SCREEN_SEEDS = [0, 1]
 
-FEATS = [
-    "sog_mean", "sog_max_jump", "cog_turn_max", "dt_max",
-    "spd_mismatch_max", "crab_mean", "prev_silence_s", "crab_valid",
-]
+FEATS = ["sog_mean", "sog_max_jump", "cog_turn_max", "dt_max",
+         "spd_mismatch_max", "crab_mean", "prev_silence_s",
+         "course_resid_mean", "mismatch_slope", "straightness",
+         "mismatch_mean", "crab_valid"]
 
 _dev = qml.device("default.qubit", wires=N_QUBITS)
 

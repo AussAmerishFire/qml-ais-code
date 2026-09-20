@@ -1,0 +1,9 @@
+09-08 17:17:50  === run_final started ===
+09-08 17:17:50  starting 11_baseline_viz.py
+09-08 17:19:48  11_baseline_viz.py exit 0  (2 min)  -> viz_baseline.log
+09-08 17:19:48  starting 15_qnn_confusion.py
+09-08 17:19:59  15_qnn_confusion.py exit 1  (0.2 min)  -> viz_qnn.log
+09-08 17:19:59    (continuing despite non-zero exit)
+09-08 17:19:59  starting 18_sweep_viz.py
+09-08 17:20:03  18_sweep_viz.py exit 0  (0.1 min)  -> viz_sweep.log
+09-08 17:20:03  starting 19_final.py

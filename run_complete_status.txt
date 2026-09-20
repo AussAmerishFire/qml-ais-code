@@ -1,0 +1,4 @@
+09-14 22:40:05  === started ===
+09-14 22:40:06  starting 22_full_sweep.py
+09-15 13:51:17  22_full_sweep.py exit 0 (15.19 h)
+09-15 13:51:17  starting 20_qsvm.py

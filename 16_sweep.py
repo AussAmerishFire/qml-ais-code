@@ -12,20 +12,20 @@ one model fit. (An earlier 4.4-hour grid was lost entirely when its session
 ended; that must not happen again.)
 
 ------------------------------------------------------------------------------
-PHASE 1 -- hyperparameter selection at full data, on validation
+PHASE 1 -- hyperparameter selection on a 14,286-window subsample
 ------------------------------------------------------------------------------
-8 configurations x 3 seeds for each of four models: two quantum architectures
-and their parameter-matched classical twins. Equal budgets, as Bowles, Ahmed &
-Schuld (2024) require.
+2 configurations x 3 seeds for each model: three quantum architectures and
+their depth- and parameter-matched classical twins. Equal budgets, as Bowles,
+Ahmed & Schuld (2024) require -- small, but small EQUALLY, and the paper says so.
 
-The previous grid was broken: half its configurations used weight decay 1e-2,
-which dominated the cross-entropy and stopped training after 2.6 epochs
-(val AUC 0.7089). The decay range here is 1e-5 to 1e-3.
+Selection runs on a 14,286-window subsample rather than all 68,296. Four of the
+five sweep points sit at or below that size, so hyperparameters are chosen in
+the regime where they are used.
 
 ------------------------------------------------------------------------------
 PHASE 2 -- the label-scarcity sweep
 ------------------------------------------------------------------------------
-Training-set size N is swept over 571 / 1,429 / 2,857 / 5,714 / 14,286 / 68,296
+Training-set size N is swept over 571 / 1,429 / 2,857 / 14,286 / 68,296
 holding the anomaly rate fixed at its natural 3.543% -- design (B) in
 BASELINES.md section 5. Holding the class ratio constant means N is the only
 variable that moves, which is what makes the comparison across sizes readable.
@@ -37,19 +37,24 @@ WHAT IS BEING TESTED
     to 0.30, which is the regime the bound describes.
 
     The sweep carries THREE values of T so it tests the SHAPE of that
-    relationship rather than a single point:
+    relationship rather than a single point. Each is paired with the smallest
+    classical MLP that matches it on BOTH depth and parameter count:
 
-        E_reup        T = 57    hybrid + data re-uploading
-        C_pre frozen  T = 74    same circuit, rotation angles NEVER trained
-        C_pre         T = 122   hybrid with a classical pre-layer
+        Q_frozen  T = 106   circuit gates NEVER trained   <-> MLP(6,4)  111
+        Q_pre     T = 154   Dense(12->8) then circuit      <-> MLP(8,5)  155
+        Q_reup    T = 161   + data re-uploading            <-> MLP(8,6)  165
 
-    The frozen model is the sharp one. At full data it scored 0.8270 against
-    the trained model's 0.8357 -- a gap of 0.009 against seed noise near 0.02,
-    i.e. the 48 trainable rotation angles were nearly decorative. The bound
-    predicts that a LOWER-T model degrades more slowly as N falls, so the
-    frozen model should GAIN ground on the trained one as the sweep proceeds.
-    If it does, that measures the bound's shape. If the gap stays flat, the
-    Caro framing does not survive and the paper reports that instead.
+    The frozen model is the sharp one. At full data (on the previous
+    8-feature dataset) it scored 0.8270 against the trained model's 0.8357 --
+    a gap of 0.009 against seed noise near 0.02, i.e. the 48 trainable rotation
+    angles were nearly decorative. The bound predicts a LOWER-T model degrades
+    more slowly as N falls, so the frozen model should GAIN ground on the
+    trained one as the sweep proceeds. If it does, that measures the bound's
+    shape. If the gap stays flat, the Caro framing does not survive and the
+    paper reports that instead.
+
+    Every quantum model carries a classical Dense(12->8) pre-layer, forced by
+    the 8-qubit budget -- see the comment above QARCH.
 
 NO EARLY STOPPING IN PHASE 2 -- a deliberate choice.
     Early stopping is itself a regulariser, and it would partially substitute
@@ -124,7 +129,10 @@ SWEEP_STEPS = 640
 RESULTS = "sweep_results.csv"
 
 FEATS = ["sog_mean", "sog_max_jump", "cog_turn_max", "dt_max",
-         "spd_mismatch_max", "crab_mean", "prev_silence_s", "crab_valid"]
+         "spd_mismatch_max", "crab_mean", "prev_silence_s",
+         "course_resid_mean", "mismatch_slope", "straightness",
+         "mismatch_mean", "crab_valid"]
+N_FEAT = len(FEATS)                      # 12
 ATTACKS = ["speed_lie", "jump", "gap", "dark", "drift"]
 # Ascending, deliberately: the small-N points are the ones the hypothesis is
 # about, so if a run is interrupted again the scientifically load-bearing data
@@ -156,17 +164,36 @@ def _circuit(n_layers, reupload):
     return c
 
 
+# EVERY quantum architecture now carries a classical Dense(12 -> 8) pre-layer.
+# This is FORCED, not chosen to flatter the quantum models:
+#
+#   AngleEmbedding puts one feature on one qubit, so 12 features would need 12
+#   qubits. A 12-qubit state vector holds 4,096 amplitudes against 256 for 8
+#   qubits -- roughly 16x the simulation cost per circuit evaluation, which
+#   turns a 9-hour sweep into a 6-day one on this laptop's CPU. It is also the
+#   realistic constraint: NISQ hardware has few usable qubits, and compressing
+#   classical features before encoding is what practitioners actually do.
+#
+# The compression is a handicap on the quantum side -- it must squeeze 12
+# features into 8 while its classical twin reads all 12 directly -- and the
+# twins still carry MORE parameters. Both asymmetries run against finding a
+# quantum advantage, which is the safe direction.
+#
+# Classical twins are matched on BOTH depth and parameter count. A quantum model
+# here is two-stage (classical layer, then circuit), so its twin is a
+# two-hidden-layer MLP, not a one-layer one. Matching only parameters and not
+# depth is what produced the false positive in QNN_RESULTS.md section 3(a).
 QARCH = {
-    "E_reup":   dict(layers=2, pre=False, post="linear", reupload=True,  frozen=False),
-    "C_pre":    dict(layers=2, pre=True,  post="sum",    reupload=False, frozen=False),
-    "C_frozen": dict(layers=2, pre=True,  post="sum",    reupload=False, frozen=True),
+    "Q_reup":   dict(layers=2, pre=True, post="linear", reupload=True,  frozen=False),
+    "Q_pre":    dict(layers=2, pre=True, post="sum",    reupload=False, frozen=False),
+    "Q_frozen": dict(layers=2, pre=True, post="sum",    reupload=False, frozen=True),
 }
 
 
 def q_params(a):
     shp = qml.StronglyEntanglingLayers.shape(n_layers=a["layers"], n_wires=N_QUBITS)
     t = 0 if a["frozen"] else int(np.prod(shp))      # frozen gates are not trainable
-    t += (N_QUBITS * N_QUBITS + N_QUBITS) if a["pre"] else 0
+    t += (N_FEAT * N_QUBITS + N_QUBITS) if a["pre"] else 0
     t += (N_QUBITS + 1) if a["post"] == "linear" else 2
     return t
 
@@ -181,7 +208,7 @@ def q_train(a, X, y, cfg, seed, epochs, patience=None):
     if not a["frozen"]:
         p["w"] = jnp.array(rng.normal(0, 0.1, shp))
     if a["pre"]:
-        p["Wp"] = jnp.array(rng.normal(0, 0.3, (N_QUBITS, N_QUBITS)))
+        p["Wp"] = jnp.array(rng.normal(0, 0.3, (N_FEAT, N_QUBITS)))
         p["bp"] = jnp.zeros(N_QUBITS)
     if a["post"] == "linear":
         p["Wo"] = jnp.array(rng.normal(0, 0.5, (N_QUBITS,)))
@@ -258,13 +285,52 @@ def q_train(a, X, y, cfg, seed, epochs, patience=None):
 # GRIDS -- 8 configurations each, matched in size and structure
 # ---------------------------------------------------------------------------
 
-QGRID = [{"lr": a, "oversample": b, "decay": c}
-         for a, b, c in itertools.product((0.02, 0.05), (None, 0.35), (1e-5, 1e-3))]
-CGRID = [{"lr": a, "oversample": b, "alpha": c}
-         for a, b, c in itertools.product((0.003, 0.01), (None, 0.35), (1e-5, 1e-3))]
+# 4 configurations, not 8. Equal on both sides, so the fairness rule holds.
+#
+# The dropped axis is weight decay, and it was dropped on evidence: in the
+# 8-config run on the previous dataset, decay changed the result far less than
+# learning rate or oversampling (C_pre cfg0 0.8467 vs cfg1 0.8427, the only
+# difference between them being decay 1e-5 vs 1e-3), while doubling a grid that
+# already costs ~9 hours of laptop CPU. Decay is fixed at 1e-4, between the two
+# values tested. lr and oversampling -- the axes that moved the result -- are
+# both still swept.
+# 2 configurations, equal on both sides.
+#
+# Cut from 8 to 4 to 2 against a hard 7.6-hour compute window. Each cut was made
+# on the axis measured to matter least:
+#   - weight decay: C_pre cfg0 0.8467 vs cfg1 0.8427, decay the only difference
+#   - oversampling: BOTH winning configurations on the previous dataset used
+#     oversample=None (C_pre cfg0, E_reup cfg4)
+# Learning rate, the axis that moved results most, is still swept. The budget is
+# small and the paper should say so -- but it is small EQUALLY, which is the
+# property Bowles, Ahmed & Schuld (2024) actually require.
+QGRID = [{"lr": a, "oversample": None, "decay": 1e-4} for a in (0.02, 0.05)]
+CGRID = [{"lr": a, "oversample": None, "alpha": 1e-4} for a in (0.003, 0.01)]
 
-CARCH = {"MLP6": (6,), "MLP85": (8, 5)}
-CPARAMS = {"MLP6": 61, "MLP85": 123}
+# Phase 1 selects on a 14,286-window subsample rather than all 68,296.
+# Full-data selection costs ~2.5 h of the window; this costs ~45 min. It is also
+# arguably the better choice for THIS experiment: four of the five sweep points
+# are at or below 14,286, so hyperparameters are being chosen in the regime
+# where they will actually be used, rather than at a sample size the sweep only
+# visits once.
+GRID_N = 14286
+
+def _mlp_params(hl, n_in=N_FEAT):
+    n, t = n_in, 0
+    for h in hl:
+        t += n * h + h
+        n = h
+    return t + n + 1
+
+
+# Each quantum architecture's twin is the two-hidden-layer MLP that is the
+# smallest with AT LEAST as many trainable parameters:
+#     Q_pre     T = 154  ->  MLP(8,5)  155
+#     Q_reup    T = 161  ->  MLP(8,6)  165
+#     Q_frozen  T = 106  ->  MLP(6,4)  111
+CARCH = {"MLP_pre": (8, 5), "MLP_reup": (8, 6), "MLP_frozen": (6, 4)}
+CPARAMS = {k: _mlp_params(v) for k, v in CARCH.items()}
+TWIN = {"Q_pre": "MLP_pre", "Q_reup": "MLP_reup", "Q_frozen": "MLP_frozen"}
 
 
 def c_train(hl, X, y, cfg, seed, budget, early):
@@ -362,17 +428,21 @@ def main():
 
     # ================= PHASE 1 : hyperparameter selection ==================
     print("=" * 74)
-    print("PHASE 1 -- 8 configs x 3 seeds, full data, validation only")
+    print("PHASE 1 -- 2 configs x 3 seeds on a 14,286 subsample, validation only")
     print("=" * 74, flush=True)
 
-    for name in ("E_reup", "C_pre"):
+    Xg, yg = subsample(X, y, GRID_N, 0, rate)
+    print(f"selection subsample: {len(yg):,} windows, "
+          f"{int(yg.sum())} anomalous ({yg.mean()*100:.2f}%)", flush=True)
+
+    for name in ("Q_reup", "Q_pre"):
         a = QARCH[name]
         for ci, cfg in enumerate(QGRID):
             for s in SEEDS_GRID:
                 if (1, name, ci, 68296, s) in done:
                     continue
                 t0 = time.time()
-                p, pred = q_train(a, X, y, cfg, s, GRID_EPOCHS, GRID_PATIENCE)
+                p, pred = q_train(a, Xg, yg, cfg, s, GRID_EPOCHS, GRID_PATIENCE)
                 r = record(1, name, ci, 68296, s, q_params(a),
                            np.asarray(pred(p, Xvj)), time.time() - t0)
                 print(f"  [{time.time()-t_start:6.0f}s] {name:<9} cfg{ci} "
@@ -385,7 +455,7 @@ def main():
                 if (1, name, ci, 68296, s) in done:
                     continue
                 t0 = time.time()
-                m = c_train(hl, X, y, cfg, s, 500, True)
+                m = c_train(hl, Xg, yg, cfg, s, 500, True)
                 r = record(1, name, ci, 68296, s, CPARAMS[name],
                            m.predict_proba(Xv)[:, 1], time.time() - t0)
                 print(f"  [{time.time()-t_start:6.0f}s] {name:<9} cfg{ci} "
@@ -394,13 +464,15 @@ def main():
     df = pd.DataFrame(rows)
     p1 = df[df.phase == 1]
     best = {}
-    for name in list(QARCH)[:2] + list(CARCH):
-        if name == "C_frozen":
-            continue
+    for name in ("Q_reup", "Q_pre") + tuple(CARCH):
         g = p1[p1.model == name].groupby("cfg_id").auc.mean()
         best[name] = int(g.idxmax())
         print(f"\n  BEST {name:<9} cfg{best[name]}  val AUC {g.max():.4f}")
-    best["C_frozen"] = best["C_pre"]          # same architecture, same settings
+    # Q_frozen is the same architecture as Q_pre with the gates held fixed, so it
+    # inherits Q_pre's selected settings rather than being tuned separately --
+    # tuning it apart would give the control a budget the model it controls for
+    # did not get.
+    best["Q_frozen"] = best["Q_pre"]
     json.dump(best, open("sweep_best_cfg.json", "w"), indent=2)
 
     # ===================== PHASE 2 : scarcity sweep ========================

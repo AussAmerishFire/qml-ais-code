@@ -1,0 +1,4 @@
+09-12 16:49:57  waiting for N=571 to finish all 3 seeds
+09-12 17:04:02  N=571 complete (3 seeds). Stopping the old process.
+09-12 17:04:07  restarting with SWEEP_N = [571, 1429] -- resumes, runs 1429 only
+09-12 17:04:08  restarted. N=1429 is ~3 h/seed, ~9 h for three.

@@ -9,13 +9,13 @@ made here.
     2. iforest - Isolation Forest                            (0 labels)
     3. logreg  - Logistic regression                         (the linear floor)
     4. trees   - Gradient boosting + Random Forest           (the strong ceiling)
-    5. mlp     - 8-5-1 neural net, 51 params                 (parameter-matched
-                 to the L=2 8-qubit QNN, which has T=50)
+    5. mlp     - 12-5-1 neural net, 71 params                (parameter-matched
+                 comparison; see BASELINES.md for the current pairing)
 
 RULES ENFORCED BY THIS SCRIPT (from BASELINES.md section 3):
   * Every hyperparameter is selected on the VALIDATION split only.
   * The TEST split is read exactly once, at the very end, for final numbers.
-  * All models see the identical 8 features, identically scaled.
+  * All models see the identical 12 features, identically scaled.
   * 5 seeds for every stochastic model; mean +/- std reported.
   * Metrics are ROC-AUC and average precision. Accuracy is NEVER reported --
     at a 3.5% anomaly rate, predicting "normal" for everything scores 96.5%.
@@ -44,21 +44,15 @@ warnings.filterwarnings("ignore")
 # CONFIGURATION
 # ---------------------------------------------------------------------------
 
-# The eight features, and ONLY these eight. The dataset files also carry
+# The twelve features, and ONLY these twelve. The dataset files also carry
 # lat_mean, lon_mean, vessel_type and length -- these are metadata for
 # interpreting results, NOT inputs. Feeding a model latitude and longitude
 # would let it memorise the geographic locations where anomalies happened to
 # be injected, which is leakage dressed up as a feature.
-FEATS = [
-    "sog_mean",
-    "sog_max_jump",
-    "cog_turn_max",
-    "dt_max",
-    "spd_mismatch_max",
-    "crab_mean",
-    "prev_silence_s",
-    "crab_valid",
-]
+FEATS = ["sog_mean", "sog_max_jump", "cog_turn_max", "dt_max",
+         "spd_mismatch_max", "crab_mean", "prev_silence_s",
+         "course_resid_mean", "mismatch_slope", "straightness",
+         "mismatch_mean", "crab_valid"]
 
 SEEDS = [0, 1, 2, 3, 4]  # 5 seeds, as declared in BASELINES.md
 ATTACKS = ["speed_lie", "drift", "jump", "gap", "dark"]
@@ -207,12 +201,13 @@ def make_rf(n_estimators, max_depth, class_weight):
 def make_mlp(alpha, lr, oversample):
     """Baseline 5 -- THE parameter-matched comparison.
 
-    hidden_layer_sizes=(5,) on 8 inputs with 1 output gives
-        8*5 (input->hidden) + 5 (hidden bias) + 5 (hidden->output) + 1 (bias)
-        = 51 trainable parameters
-    against T = 50 for the 8-qubit StronglyEntanglingLayers circuit at L=2
-    (48 circuit weights + 2 readout). A 2% edge to the classical model, which
-    is the safe direction: we are not handicapping the baseline.
+    hidden_layer_sizes=(5,) on 12 inputs with 1 output gives
+        12*5 (input->hidden) + 5 (hidden bias) + 5 (hidden->output) + 1 (bias)
+        = 71 trainable parameters.
+    (Written for the original 8-feature, 51-parameter design against a T = 50
+    circuit. The final HQNNs have T = 106-161, so this model is now SMALLER
+    than every quantum model; the depth- and parameter-matched twins live in
+    16_sweep.py.)
 
     `oversample` duplicates positives to reach the given minority fraction.
     MLPClassifier has no class_weight parameter, so this is how the classical

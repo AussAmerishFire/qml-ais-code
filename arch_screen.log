@@ -1,0 +1,19 @@
+ARCHITECTURE SCREEN -- validation only, fixed hyperparameters
+  {'lr': 0.02, 'oversample': None, 'decay': 0.0001}
+
+arch         T  MLP h  MLP T     quantum val AUC   classical twin
+------------------------------------------------------------------------
+A_vqc       50      5     51       0.7969 +/-0.001     0.8282 +/-0.014   [652s]
+         pure VQC, summed readout -- what 12_qnn.py built. NOT hybrid.
+B_post      57      6     61       0.8103 +/-0.004     0.8440 +/-0.016   [758s]
+         hybrid: trainable classical layer over the 8 measured qubits
+C_pre      122     13    131       0.8456 +/-0.003     0.8297 +/-0.017   [868s]
+         hybrid: classical layer feeds the circuit
+D_both     129     13    131       0.8218 +/-0.008     0.8297 +/-0.017   [428s]
+         full hybrid: classical -> quantum -> classical, end to end
+E_reup      57      6     61       0.8343 +/-0.001     0.8440 +/-0.016   [696s]
+         hybrid + data re-uploading (same T as B, more expressive)
+F_deep     105     11    111       0.8186 +/-0.008     0.8188 +/-0.024   [5807s]
+         deeper circuit, L=4 -- doubles the quantum parameter count
+
+wrote arch_screen.json

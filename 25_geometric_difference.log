@@ -1,0 +1,42 @@
+sleep prevention: active
+resuming with 0 (N, seed) cells on disk
+
+  N=571 seed0: quantum kernel (162,735 pairs)
+  [  3.8 min] N=571 seed0  min g_gen 3.13 via rbf x30  (sqrt N 23.9)  K_Q off-diag 0.073  (225s)
+  N=571 seed1: quantum kernel (162,735 pairs)
+  [  7.3 min] N=571 seed1  min g_gen 2.88 via rbf x30  (sqrt N 23.9)  K_Q off-diag 0.058  (210s)
+  N=571 seed2: quantum kernel (162,735 pairs)
+  [ 10.7 min] N=571 seed2  min g_gen 2.86 via rbf x30  (sqrt N 23.9)  K_Q off-diag 0.051  (205s)
+  N=571 seed3: quantum kernel (162,735 pairs)
+  [ 13.6 min] N=571 seed3  min g_gen 2.77 via rbf x30  (sqrt N 23.9)  K_Q off-diag 0.062  (174s)
+  N=571 seed4: quantum kernel (162,735 pairs)
+  [ 16.6 min] N=571 seed4  min g_gen 3.02 via rbf x30  (sqrt N 23.9)  K_Q off-diag 0.062  (183s)
+  N=1429 seed0: quantum kernel (1,020,306 pairs)
+      K_Q  80.4%  eta   2.3 min
+  [ 38.4 min] N=1429 seed0  no classical kernel fits at lam .01  (sqrt N 37.8)  K_Q off-diag 0.067  (1309s)
+  N=1429 seed1: quantum kernel (1,020,306 pairs)
+      K_Q  80.4%  eta   2.9 min
+  [ 61.4 min] N=1429 seed1  no classical kernel fits at lam .01  (sqrt N 37.8)  K_Q off-diag 0.061  (1377s)
+  N=1429 seed2: quantum kernel (1,020,306 pairs)
+      K_Q  80.4%  eta   2.8 min
+  [ 81.7 min] N=1429 seed2  min g_gen 3.87 via rbf x30  (sqrt N 37.8)  K_Q off-diag 0.086  (1219s)
+  N=1429 seed3: quantum kernel (1,020,306 pairs)
+      K_Q  80.4%  eta   2.3 min
+  [ 99.1 min] N=1429 seed3  no classical kernel fits at lam .01  (sqrt N 37.8)  K_Q off-diag 0.087  (1045s)
+  N=1429 seed4: quantum kernel (1,020,306 pairs)
+      K_Q  80.4%  eta   2.8 min
+  [125.6 min] N=1429 seed4  min g_gen 4.11 via rbf x30  (sqrt N 37.8)  K_Q off-diag 0.091  (1588s)
+
+==============================================================================
+Geometric difference, minimum over classical kernels (median over seeds)
+==============================================================================
+  N=  571  lam=0.001  g=  2.91 [2.79-3.16] of max 23.9  (5/5 seeds)   s_Q=   441.7  min s_C=   345.3
+  N=  571  lam=0.01   g=  2.88 [2.77-3.13] of max 23.9  (5/5 seeds)   s_Q=   198.3  min s_C=   306.7
+  N=  571  lam=0.1    no classical kernel fits (g_tra > 0.1)
+  N=  571  lam=1.0    no classical kernel fits (g_tra > 0.1)
+  N= 1429  lam=0.001  g=  3.83 [3.78-4.15] of max 37.8  (5/5 seeds)   s_Q=  2367.7  min s_C=  1633.1
+  N= 1429  lam=0.01   g=  3.99 [3.87-4.11] of max 37.8  (2/5 seeds)   s_Q=   757.3  min s_C=   712.8
+  N= 1429  lam=0.1    no classical kernel fits (g_tra > 0.1)
+  N= 1429  lam=1.0    no classical kernel fits (g_tra > 0.1)
+
+[125.6 min]  wrote geometric_difference.csv

@@ -1,27 +1,27 @@
 {
   "rule": {
-    "val_auc": 0.7494,
+    "val_auc": 0.7494023367901838,
     "params": {
       "feature": "spd_mismatch_max"
     }
   },
   "iforest": {
-    "val_auc": 0.8269,
+    "val_auc": 0.8433962305870013,
     "params": {
-      "n_estimators": 200,
+      "n_estimators": 500,
       "max_samples": 1024,
       "contamination": 0.02
     }
   },
   "logreg": {
-    "val_auc": 0.8306,
+    "val_auc": 0.8488677123451172,
     "params": {
       "C": 0.01,
-      "class_weight": null
+      "class_weight": "balanced"
     }
   },
   "gbt": {
-    "val_auc": 0.8216,
+    "val_auc": 0.8721582474206289,
     "params": {
       "max_iter": 100,
       "max_depth": 3,
@@ -29,7 +29,7 @@
     }
   },
   "rf": {
-    "val_auc": 0.8659,
+    "val_auc": 0.8950069362541221,
     "params": {
       "n_estimators": 300,
       "max_depth": 6,
@@ -37,11 +37,11 @@
     }
   },
   "mlp": {
-    "val_auc": 0.8441162013826519,
+    "val_auc": 0.8630164767543725,
     "params": {
-      "alpha": 0.01,
+      "alpha": 0.0001,
       "lr": 0.01,
-      "oversample": 0.35
+      "oversample": 0.2
     }
   }
 }

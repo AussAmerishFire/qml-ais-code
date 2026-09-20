@@ -1,42 +1,39 @@
 """
 15_qnn_confusion.py
 ===================
-Confusion matrices for the quantum architectures and their classical twins.
+Confusion matrices for the three current quantum architectures and their
+depth- and parameter-matched classical twins.
 
-*** THESE ARE VALIDATION-SET MATRICES, NOT TEST. ***
+RUN THIS AFTER 19_final.py -- it trains six models and would otherwise compete
+with that run for the same CPU cores.
 
-The test split has not been opened for any quantum model and must not be until
-a configuration is finally selected -- the 12-config grid never completed, so
-selection is unfinished. Validation can be looked at repeatedly; test cannot.
-Every number here is therefore directly comparable to the validation AUCs in
-QNN_RESULTS.md, and NOT to the test numbers in BASELINES.md section 6.
+*** VALIDATION-SET MATRICES. *** 19_final.py owns the test-set numbers; this
+file exists to show the SHAPE of each model's errors, which a single confusion
+matrix can do and an aggregate AUC cannot.
 
-ALERT BUDGET
-    Each model flags the top 3.09% of windows by score -- the validation split's
-    own anomaly rate (537 of 17,381). Holding the budget fixed is what makes the
-    matrices comparable: all six flag exactly 537 windows, and only *which*
-    windows differ. Note this is 3.09%, not the 3.5% used for the test-set
-    figures, because each split is held to its own true rate.
+Architectures come from 16_sweep.py, the script that actually produced the
+results. An earlier version imported them from 13_architectures.py -- the
+superseded 8-feature screen -- and crashed with "Features must be of length 8
+or less; got length 12", because those variants feed features straight into
+AngleEmbedding with no classical pre-layer. That is the same failure mode as
+09_independent_check.py importing 01_build_windows: a file pointing at
+definitions that something else replaced.
 
-Seed 0 throughout, as with fig_b1. Seed-to-seed spread is in QNN_RESULTS.md;
-a single confusion matrix is a single draw by construction.
+Seed 0 throughout. A confusion matrix is one draw by construction, so it is
+useful for reading error structure and USELESS for ranking models -- the
+ranking lives in RESULTS_SWEEP.md and final_results.csv, at 5 and 10 seeds.
 """
 
 import importlib.util
-import time
 
 import jax
-
-jax.config.update("jax_enable_x64", True)
-
-import jax.numpy as jnp                              # noqa: E402
-import matplotlib as mpl                             # noqa: E402
-import matplotlib.pyplot as plt                      # noqa: E402
-import numpy as np                                   # noqa: E402
-import pandas as pd                                  # noqa: E402
-from matplotlib.colors import LinearSegmentedColormap  # noqa: E402
-from sklearn.metrics import roc_auc_score            # noqa: E402
-from sklearn.neural_network import MLPClassifier     # noqa: E402
+import jax.numpy as jnp
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from matplotlib.colors import LinearSegmentedColormap
+from sklearn.metrics import roc_auc_score
 
 
 def _load(path, name):
@@ -46,13 +43,8 @@ def _load(path, name):
     return mod
 
 
-arch = _load("13_architectures.py", "arch")
-ctrl = _load("14_controls.py", "ctrl")
+sw = _load("16_sweep.py", "sw")
 
-FEATS = arch.FEATS
-CFG = {"lr": 0.02, "oversample": None, "decay": 1e-4}   # as in the screen
-
-# Style: same tokens as 11_baseline_viz.py so the figures read as one set.
 SURFACE, INK, INK2, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e8e7e3"
 BLUES = LinearSegmentedColormap.from_list(
     "seqblue",
@@ -62,59 +54,55 @@ mpl.rcParams.update({
     "savefig.facecolor": SURFACE, "font.size": 9.5, "figure.dpi": 150,
 })
 
+TITLE = {
+    "Q_pre":      "Q_pre — Dense(12→8) → circuit",
+    "MLP_pre":    "MLP(8,5) — depth-matched twin",
+    "Q_reup":     "Q_reup — + data re-uploading",
+    "MLP_reup":   "MLP(8,6) — depth-matched twin",
+    "Q_frozen":   "Q_frozen — gates NEVER trained",
+    "MLP_frozen": "MLP(6,4) — depth-matched twin",
+}
+ORDER = ["Q_pre", "MLP_pre", "Q_reup", "MLP_reup", "Q_frozen", "MLP_frozen"]
+
 
 def main():
+    import json
     tr = pd.read_csv("dataset_train.csv")
     va = pd.read_csv("dataset_val.csv")
-    X, y = tr[FEATS].to_numpy(float), tr.label.to_numpy(int)
-    Xv, yv = va[FEATS].to_numpy(float), va.label.to_numpy(int)
-    Xvj = jnp.array(Xv)
+    X, y = tr[sw.FEATS].to_numpy(float), tr.label.to_numpy(int)
+    Xv, yv = va[sw.FEATS].to_numpy(float), va.label.to_numpy(int)
+    best = json.load(open("sweep_best_cfg.json"))
     rate = yv.mean()
-    print(f"validation: {len(yv):,} windows, {int(yv.sum())} anomalous "
-          f"({rate*100:.2f}%) -- alert budget set to that rate\n")
+    print(f"validation {len(yv):,} windows, {int(yv.sum())} anomalous "
+          f"({rate*100:.2f}%) -- alert budget set to that rate\n", flush=True)
 
-    panels = []
+    scores = {}
+    for name in ORDER:
+        if name in sw.QARCH:
+            cfg = sw.QGRID[best[name]]
+            p, pred = sw.q_train(sw.QARCH[name], X, y, cfg, 0,
+                                 sw.SWEEP_STEPS, None)
+            s = np.asarray(pred(p, jnp.array(Xv)))
+            T = sw.q_params(sw.QARCH[name])
+        else:
+            cfg = sw.CGRID[best[name]]
+            m = sw.c_train(sw.CARCH[name], X, y, cfg, 0, sw.SWEEP_STEPS, False)
+            s = m.predict_proba(Xv)[:, 1]
+            T = sw.CPARAMS[name]
+        scores[name] = (s, T)
+        print(f"  {name:<11} T={T:>4}  AUC {roc_auc_score(yv, s):.4f}", flush=True)
 
-    # --- quantum architectures -------------------------------------------
-    for key, title in (("A_vqc", "A — pure VQC (not hybrid)\nT = 50"),
-                       ("E_reup", "E — hybrid + re-uploading\nT = 57"),
-                       ("C_pre", "C — hybrid, classical pre-layer\nT = 122")):
-        t0 = time.time()
-        a = arch.ARCHS[key]
-        p, _, predict = arch.train(a, X, y, CFG, 0)
-        s = np.asarray(predict(p, Xvj))
-        panels.append((title, s, arch.param_count(a)))
-        print(f"  {key:<8} AUC {roc_auc_score(yv, s):.4f}  [{time.time()-t0:.0f}s]",
-              flush=True)
-
-    # --- the control that matters ----------------------------------------
-    t0 = time.time()
-    p, predict = ctrl.train_quantum("frozen", X, y, 0)
-    s = np.asarray(predict(p, Xvj))
-    panels.append(("C frozen — gates never trained\n74 trainable", s, 74))
-    print(f"  frozen   AUC {roc_auc_score(yv, s):.4f}  [{time.time()-t0:.0f}s]",
-          flush=True)
-
-    # --- classical twins --------------------------------------------------
-    for hl, npar, title in (((8, 5), 123, "MLP (8,5) — depth-matched to C\n123 params"),
-                            ((5,), 51, "MLP (5,) — matched to A\n51 params")):
-        m = MLPClassifier(hidden_layer_sizes=hl, alpha=1e-4,
-                          learning_rate_init=0.01, max_iter=500,
-                          early_stopping=True, n_iter_no_change=20,
-                          random_state=0).fit(X, y)
-        s = m.predict_proba(Xv)[:, 1]
-        panels.append((title, s, npar))
-        print(f"  MLP{str(hl):<7} AUC {roc_auc_score(yv, s):.4f}", flush=True)
-
-    # --- draw --------------------------------------------------------------
     k = max(1, int(round(len(yv) * rate)))
-    fig, axes = plt.subplots(2, 3, figsize=(11.5, 7.4))
-    for ax, (title, s, npar) in zip(axes.ravel(), panels):
+    fig, axes = plt.subplots(3, 2, figsize=(9.5, 11))
+    for ax, name in zip(axes.ravel(), ORDER):
+        s, T = scores[name]
         pred = s >= np.partition(s, -k)[-k]
-        cm = np.array([[int(((~pred) & (yv == 0)).sum()), int((pred & (yv == 0)).sum())],
-                       [int(((~pred) & (yv == 1)).sum()), int((pred & (yv == 1)).sum())]])
-        # Coloured by ROW rate, not raw count: counts run from 16,000 to 100, so
-        # a count ramp would paint one cell dark and say nothing.
+        cm = np.array([[int(((~pred) & (yv == 0)).sum()),
+                        int((pred & (yv == 0)).sum())],
+                       [int(((~pred) & (yv == 1)).sum()),
+                        int((pred & (yv == 1)).sum())]])
+        # Coloured by ROW rate: raw counts span 16,000 to 100, so a count ramp
+        # would paint one cell dark and say nothing.
         r = cm / cm.sum(axis=1, keepdims=True)
         ax.imshow(r, cmap=BLUES, vmin=0, vmax=1)
         for i in range(2):
@@ -126,8 +114,9 @@ def main():
                         va="center", fontsize=8,
                         color="white" if r[i, j] > 0.55 else INK2)
         ax.set_xticks([0, 1], ["not flagged", "flagged"], fontsize=8.5)
-        ax.set_yticks([0, 1], ["actually\nnormal", "actually\nanomalous"], fontsize=8.5)
-        ax.set_title(f"{title}\nAUC {roc_auc_score(yv, s):.4f}  ·  "
+        ax.set_yticks([0, 1], ["actually\nnormal", "actually\nanomalous"],
+                      fontsize=8.5)
+        ax.set_title(f"{TITLE[name]}   T={T}\nAUC {roc_auc_score(yv, s):.4f}  ·  "
                      f"recall {r[1,1]*100:.1f}%  ·  "
                      f"precision {cm[1,1]/max(1,cm[:,1].sum())*100:.1f}%",
                      fontsize=9.5, color=INK)
@@ -136,11 +125,10 @@ def main():
             sp.set_visible(False)
 
     fig.suptitle(
-        "VALIDATION-set confusion matrices  ·  17,381 windows, 537 anomalous  ·  "
-        "every model flags the same 537\n"
-        "Test split is still closed for all quantum models — these are NOT test "
-        "results",
-        fontsize=11.5, fontweight="bold", color=INK, y=1.02)
+        "Validation confusion matrices, 12 features  ·  17,381 windows, "
+        "537 anomalous\nEach quantum model sits beside its depth- and "
+        "parameter-matched classical twin  ·  seed 0",
+        fontsize=11.5, fontweight="bold", color=INK, y=1.005)
     fig.tight_layout()
     fig.savefig("fig_q1_confusion.png", bbox_inches="tight")
     print("\nwrote fig_q1_confusion.png")

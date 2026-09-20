@@ -19,12 +19,24 @@ Two independent routes to the same numbers. Disagreement means a bug.
 Run:  .venv/Scripts/python.exe 09_independent_check.py
 """
 
+import math
 import numpy as np
 import pandas as pd
 from importlib import import_module
 
-b = import_module("01_build_windows")
-inj = import_module("05_build_dataset")
+# Both point at PIPELINE.py, the script that ACTUALLY produces the dataset.
+# They previously pointed at 01_build_windows and 05_build_dataset, which
+# PIPELINE.py superseded -- so this file was verifying code that no longer
+# generates anything, and silently missed the four features added on
+# 2026-09-07 (KeyError: 'mismatch_mean').
+#
+# The independence of this check has never come from importing a different
+# builder. It comes from features_by_hand() below, which recomputes every
+# feature with different formulas (spherical law of cosines rather than
+# haversine, explicit loops rather than pandas, forward azimuth written out
+# longhand). Verifying against the live pipeline is strictly more correct.
+b = import_module("PIPELINE")
+inj = b
 
 RNG = np.random.default_rng(7)
 N_SAMPLE = 300
@@ -53,6 +65,7 @@ def features_by_hand(rows):
     rows: list of dicts with lat, lon, sog, cog, hdg, t (seconds)."""
     n = len(rows)
     dts, dists, mismatches, turns, jumps = [], [], [], [], []
+    resids = []
     for i in range(1, n):
         a, c = rows[i-1], rows[i]
         dt = c["t"] - a["t"]
@@ -65,6 +78,16 @@ def features_by_hand(rows):
         raw = abs(c["cog"] - a["cog"]) % 360.0
         turns.append(360.0 - raw if raw > 180.0 else raw)
         jumps.append(abs(c["sog"] - a["sog"]))
+        # Reported course vs the bearing actually travelled, recomputed here by
+        # the FORWARD-AZIMUTH formula written out longhand. The pipeline uses
+        # its own bearing_deg(); agreement between two independent formulas is
+        # the point of this file.
+        if d >= 1.0 and c["cog"] != 360.0:
+            y_ = math.sin(math.radians(c["lon"] - a["lon"])) *                  math.cos(math.radians(c["lat"]))
+            x_ = math.cos(math.radians(a["lat"])) * math.sin(math.radians(c["lat"])) -                  math.sin(math.radians(a["lat"])) * math.cos(math.radians(c["lat"])) *                  math.cos(math.radians(c["lon"] - a["lon"]))
+            brg = (math.degrees(math.atan2(y_, x_)) + 360.0) % 360.0
+            rr = abs(c["cog"] - brg) % 360.0
+            resids.append(360.0 - rr if rr > 180.0 else rr)
     # rows[0] is the predecessor, so the WINDOW itself is rows[1:]
     return {
         "sog_mean": sum(r["sog"] for r in rows[1:]) / (n - 1),
@@ -72,6 +95,8 @@ def features_by_hand(rows):
         "sog_max_jump": max(jumps) if jumps else np.nan,
         "cog_turn_max": max(turns) if turns else np.nan,
         "spd_mismatch_max": max(mismatches) if mismatches else np.nan,
+        "mismatch_mean": (sum(mismatches) / len(mismatches)) if mismatches else np.nan,
+        "course_resid_mean": (sum(resids) / len(resids)) if resids else np.nan,
     }
 
 
@@ -90,7 +115,8 @@ tracks = {k: g.reset_index(drop=True) for k, g in
 sample = Wc.sample(n=min(N_SAMPLE, len(Wc)), random_state=7)
 
 worst = {"sog_mean": 0, "dt_max": 0, "sog_max_jump": 0,
-         "cog_turn_max": 0, "spd_mismatch_max": 0}
+         "cog_turn_max": 0, "spd_mismatch_max": 0,
+         "mismatch_mean": 0, "course_resid_mean": 0}
 n_ok = 0
 for _, w in sample.iterrows():
     t = tracks.get((w.MMSI, w.track_id))
@@ -172,8 +198,13 @@ check("drift stayed subtle (no impossible speeds)",
 print("\n" + "="*80)
 print("C. REALISED SEVERITIES INSIDE THEIR DERIVED BOUNDS")
 print("="*80)
+# speed_lie changed from an ADDITIVE offset in knots (SPEED_LIE_KN, the old
+# 05_build_dataset) to a MULTIPLIER (SPEED_LIE) in PIPELINE.py, after the
+# additive version was found to drag sog_mean down to 3.84 against 7.71 for
+# normal windows. The severity recorded for a speed_lie attack is therefore a
+# multiplier now, and is bounds-checked as one.
 BOUNDS = {"drift": inj.DRIFT_M, "jump": inj.JUMP_M, "gap": inj.GAP_S,
-          "speed_lie": inj.SPEED_LIE_KN, "dark": inj.DARK_S}
+          "speed_lie": inj.SPEED_LIE, "dark": inj.DARK_S}
 for a, (lo, hi) in BOUNDS.items():
     s = W.loc[W.attack == a, "severity"]
     ok = (s.min() >= lo - 1e-6) and (s.max() <= hi + 1e-6)

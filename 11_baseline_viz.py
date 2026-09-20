@@ -10,7 +10,7 @@ paper, so there is no dark variant):
   fig_b2_roc.png          ROC curves, with the actual operating point marked
   fig_b3_pr.png           precision-recall curves (the honest view at 3.5%)
   fig_b4_per_attack.png   per-attack AUC and per-attack recall at the budget
-  fig_b5_score_dist.png   score distributions, normal vs anomalous
+  fig_b5_enrichment.png   anomaly rate by score band
   fig_b6_budget.png       recall as a function of how much traffic you can check
   fig_b7_importance.png   which features the models actually use
   fig_b8_val_test.png     the validation-to-test drop and what explains it
@@ -71,7 +71,7 @@ SERIES = {
 LABEL = {
     "rf": "Random forest",
     "gbt": "Gradient boosting",
-    "mlp": "MLP (51 params)",
+    "mlp": "MLP (71 params)",
     "logreg": "Logistic regression",
     "iforest": "Isolation Forest",
     "rule": "Threshold rule",
@@ -117,10 +117,10 @@ def tidy(ax):
         ax.spines[s].set_visible(False)
 
 
-FEATS = [
-    "sog_mean", "sog_max_jump", "cog_turn_max", "dt_max",
-    "spd_mismatch_max", "crab_mean", "prev_silence_s", "crab_valid",
-]
+FEATS = ["sog_mean", "sog_max_jump", "cog_turn_max", "dt_max",
+         "spd_mismatch_max", "crab_mean", "prev_silence_s",
+         "course_resid_mean", "mismatch_slope", "straightness",
+         "mismatch_mean", "crab_valid"]
 FEAT_LABEL = {
     "sog_mean": "mean speed",
     "sog_max_jump": "largest speed jump",
@@ -130,6 +130,10 @@ FEAT_LABEL = {
     "crab_mean": "mean crab angle",
     "prev_silence_s": "silence before window",
     "crab_valid": "crab angle validity",
+    "course_resid_mean": "course vs bearing travelled",
+    "mismatch_slope": "mismatch trend across window",
+    "straightness": "path straightness",
+    "mismatch_mean": "mean speed/position mismatch",
 }
 ATTACKS = ["speed_lie", "jump", "gap", "dark", "drift"]  # easiest -> hardest
 ALERT_RATE = 0.035

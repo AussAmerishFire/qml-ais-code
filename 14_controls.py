@@ -50,10 +50,10 @@ N_QUBITS, BATCH, MAX_EPOCHS, PATIENCE = 8, 4096, 60, 10
 SEEDS = [0, 1, 2]
 CFG = {"lr": 0.02, "oversample": None, "decay": 1e-4}   # identical to the screen
 
-FEATS = [
-    "sog_mean", "sog_max_jump", "cog_turn_max", "dt_max",
-    "spd_mismatch_max", "crab_mean", "prev_silence_s", "crab_valid",
-]
+FEATS = ["sog_mean", "sog_max_jump", "cog_turn_max", "dt_max",
+         "spd_mismatch_max", "crab_mean", "prev_silence_s",
+         "course_resid_mean", "mismatch_slope", "straightness",
+         "mismatch_mean", "crab_valid"]
 
 _dev = qml.device("default.qubit", wires=N_QUBITS)
 

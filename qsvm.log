@@ -1,0 +1,28 @@
+sleep prevention: active
+resuming with 0 runs on disk
+
+  N=571 seed0: train kernel (162,735 pairs) ...
+      C=10.0  213 support vectors of 571  -> val kernel (3,702,153 pairs)
+      val  22.1%  eta 113.2 min
+      val  43.8%  eta  60.0 min
+      val  65.4%  eta  30.6 min
+      val  87.0%  eta  10.1 min
+  [  83.7 min] N=571 seed0  val AUC 0.7591  drift 0.651  (83.7 min)
+
+  N=571 seed1: train kernel (162,735 pairs) ...
+      C=1.0  230 support vectors of 571  -> val kernel (3,997,630 pairs)
+      val  20.5%  eta  53.9 min
+      val  40.5%  eta  46.9 min
+      val  60.5%  eta  26.9 min
+      val  80.5%  eta  12.4 min
+  [ 148.0 min] N=571 seed1  val AUC 0.7858  drift 0.668  (64.4 min)
+
+  N=571 seed2: train kernel (162,735 pairs) ...
+      C=10.0  226 support vectors of 571  -> val kernel (3,928,106 pairs)
+      val  20.9%  eta  57.7 min
+      val  41.2%  eta  39.8 min
+      val  61.6%  eta  24.5 min
+      val  82.0%  eta  10.0 min
+  [ 205.3 min] N=571 seed2  val AUC 0.7116  drift 0.515  (57.3 min)
+
+  N=1429 seed0: train kernel (1,020,306 pairs) ...

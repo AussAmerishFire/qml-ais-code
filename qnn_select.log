@@ -1,0 +1,4 @@
+SELECTION -- 12 configs x 5 seeds, validation split only (T = 50)
+
+  [ 1/12] lr=0.02  ov=None  decay=0.0001 -> val AUC 0.8067 +/- 0.0061  (37 epochs, 15977s)
+  [ 2/12] lr=0.02  ov=None  decay=0.01   -> val AUC 0.7089 +/- 0.0128  (3 epochs, 1228s)

@@ -104,14 +104,49 @@ RNG = np.random.default_rng(42)
 USECOLS = ["MMSI", "BaseDateTime", "LAT", "LON", "SOG", "COG", "Heading",
            "VesselType", "Length", "TransceiverClass"]
 
-# The 7 engineered features plus a missingness flag = 8 model inputs
+# The 11 engineered features plus a missingness flag = 12 model inputs.
+#
+# The last four were added after 17_feature_probe.py measured what the original
+# eight were missing. Every original feature is a mean or a MAX over the window,
+# and a max cannot see a gradual trend -- which is precisely what the drift
+# attack is (`a_drift` slides position along a bearing with ramp**1.5 while
+# leaving SOG, COG and Heading untouched). Measured effect of adding them, on a
+# held-out vessel-disjoint split, random forest:
+#
+#     overall  0.7899 -> 0.8333      dark  0.823 -> 0.965
+#     drift    0.526  -> 0.578       gap   0.958 -> 0.960
+#
+# The large gain was on `dark`, not `drift`, which was not the prediction. Drift
+# remains the hard case. `course_resid_mean` is nonetheless the single best
+# drift feature measured (univariate AUC 0.6554, above crab_mean's 0.6393), and
+# `mismatch_mean` beats `spd_mismatch_max` outright (0.7312 vs 0.7258) -- the
+# mean is a better detector than the max, because small consistent errors
+# accumulate while noise cancels.
 CORE = ["sog_mean", "sog_max_jump", "cog_turn_max", "dt_max",
-        "spd_mismatch_max", "crab_mean", "prev_silence_s"]
+        "spd_mismatch_max", "crab_mean", "prev_silence_s",
+        # --- added 2026-09-07 ---
+        "course_resid_mean",   # reported COG vs the bearing actually travelled.
+                               # bearing_deg() was already computed per step and
+                               # then discarded; nothing measured this before.
+        "mismatch_slope",      # least-squares slope of spd_mismatch across the
+                               # window. Drift is a TREND; a max cannot see one.
+        "straightness",        # net displacement / path length. Drift bends the
+                               # track away from a straight run.
+        "mismatch_mean"]       # mean rather than max of spd_mismatch.
+
 # These span orders of magnitude. Angle encoding maps each feature to a rotation
 # between 0 and pi; without a log transform 99% of values would map to nearly the
 # same angle and that qubit would carry almost no information.
 LOGGED = ["sog_max_jump", "cog_turn_max", "dt_max", "spd_mismatch_max",
-          "crab_mean", "prev_silence_s"]
+          "crab_mean", "prev_silence_s", "mismatch_mean"]
+
+# mismatch_slope is the one feature that takes NEGATIVE values (a falling trend
+# is as informative as a rising one), so plain log10 would produce NaN for half
+# of it. It is heavy-tailed in both directions, so it gets a signed log:
+# sign(x) * log10(1 + |x|), which is monotone, defined everywhere, and maps 0
+# to 0. course_resid_mean (0-180 degrees) and straightness (a 0-1 ratio) are
+# already bounded and need no transform.
+SIGNED_LOG = ["mismatch_slope"]
 
 
 # ==============================================================================
@@ -240,7 +275,51 @@ def per_step(df):
     # data often forgets to keep them consistent
     df["crab"] = np.where((df.Heading == HEADING_NA) | (df.COG == COG_NA), np.nan,
                           ang_diff(df.COG, df.Heading))
+
+    # Reported course versus the direction the vessel ACTUALLY moved between
+    # the last two positions. crab (above) compares COG with Heading -- where
+    # the hull points -- and a drift attack changes neither, which is why crab
+    # barely detects it. This compares COG with the bearing implied by the
+    # positions themselves, and a drift attack breaks exactly that.
+    #
+    # Three cases must be excluded or they masquerade as huge residuals:
+    # the 360 sentinel for missing COG, the NaN bearing on each track's first
+    # report, and near-stationary steps where the bearing between two nearly
+    # identical positions is numerical noise.
+    df["course_resid"] = np.where(
+        (df.COG == COG_NA) | df.bearing.isna() | (df.dist_m < 1.0),
+        np.nan, ang_diff(df.COG, df.bearing))
     return df
+
+
+# Least-squares slope against evenly spaced x. For x = 0..WINDOW-1 the
+# denominator is constant, so it is computed once here rather than per window
+# (there are ~115,000 windows).
+_X = np.arange(WINDOW, dtype=float)
+_XC = _X - _X.mean()
+_DEN = (_XC ** 2).sum()
+
+
+def _slope(v):
+    """Trend of a quantity across the window. Drift produces a monotone,
+    accelerating ramp; a max over the same values sees almost nothing."""
+    v = np.asarray(v, dtype=float)
+    if np.isnan(v).all():
+        return 0.0
+    v = np.nan_to_num(v, nan=np.nanmean(v))
+    return float((_XC * (v - v.mean())).sum() / _DEN)
+
+
+def _straightness(w):
+    """Net displacement divided by distance actually travelled, in [0, 1].
+
+    A vessel holding a course scores near 1. Drift pushes position sideways
+    along a fixed bearing, bending the path, which pulls this below 1. Windows
+    with no measurable movement score 1 (a stationary vessel is not 'curved').
+    """
+    net = haversine_m(w.LAT.iloc[0], w.LON.iloc[0], w.LAT.iloc[-1], w.LON.iloc[-1])
+    path = float(np.nansum(w.dist_m.values))
+    return float(net / path) if path > 1.0 else 1.0
 
 
 def windows(df):
@@ -266,6 +345,11 @@ def windows(df):
                 "spd_mismatch_max": w.spd_mismatch.max(),
                 "crab_mean":        w.crab.mean(),
                 "prev_silence_s":   w.prev_silence_s.iloc[0],
+                # --- trend and direction features (added 2026-09-07) ---
+                "course_resid_mean": w.course_resid.mean(),
+                "mismatch_slope":    _slope(w.spd_mismatch.values),
+                "straightness":      _straightness(w),
+                "mismatch_mean":     w.spd_mismatch.mean(),
                 # carried through so window labels can be assigned later
                 "anom_row": w.anom_row.any() if "anom_row" in w else False,
                 "attack":   w.attack.iloc[0] if "attack" in w else "none",
@@ -442,6 +526,14 @@ def split_and_scale(W):
     W = W.copy()
     W["crab_valid"] = (~W.crab_mean.isna()).astype(int)
     W["crab_mean"]  = W.crab_mean.fillna(W.crab_mean.median())
+    # course_resid_mean is NaN when every step in the window was excluded --
+    # missing COG, or the vessel moved less than a metre so its bearing is
+    # numerical noise. Median-filled like crab_mean. No separate validity flag:
+    # the two share most of their missingness (both need a valid COG), so a
+    # second flag would be near-duplicate of crab_valid.
+    for _c in ("course_resid_mean", "mismatch_slope", "straightness",
+               "mismatch_mean"):
+        W[_c] = W[_c].fillna(W[_c].median())
 
     # STRATIFIED split BY VESSEL.
     #   By vessel, because ten consecutive reports from one ship and the next ten
@@ -478,6 +570,9 @@ def split_and_scale(W):
     for d in (tr, va, te):
         for c in LOGGED:
             d[c] = np.log10(d[c].clip(lower=0) + 1e-2)
+        for c in SIGNED_LOG:
+            # Monotone, defined for negatives, and maps 0 to 0.
+            d[c] = np.sign(d[c]) * np.log10(1.0 + d[c].abs())
 
     # Scale to [0, pi] for angle encoding, using TRAIN statistics ONLY.
     # Computing min/max across all data would leak test information into training.
@@ -517,7 +612,7 @@ def main():
     D = D.sort_values(["MMSI", "BaseDateTime"]).reset_index(drop=True)
     D = per_step(D.drop(columns=[c for c in
         ["dt_s","dist_m","implied_kn","d_sog","d_cog","bearing","spd_mismatch",
-         "crab","track_id","prev_silence_s"] if c in D.columns]))
+         "crab","course_resid","track_id","prev_silence_s"] if c in D.columns]))
 
     W = windows(D)
     W["label"] = W.anom_row.astype(int)

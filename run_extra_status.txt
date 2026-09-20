@@ -1,0 +1,6 @@
+09-18 23:18:07  === started ===
+09-18 23:18:07  starting 26_quantum_features_rf.py
+09-19 00:01:25  26_quantum_features_rf.py exit 0 (43 min)
+09-19 00:01:25  starting 25_geometric_difference.py
+09-19 02:07:09  25_geometric_difference.py exit 0 (125 min)
+09-19 02:07:09  === done ===

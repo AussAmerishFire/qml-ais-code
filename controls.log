@@ -1,0 +1,12 @@
+CONTROLS FOR C_pre -- validation only, 3 seeds, identical settings
+
+control                             trainable           val AUC
+----------------------------------------------------------------
+C_pre (quantum, as screened)              122      0.8357 +/-0.021
+  circuit FROZEN (random gates)            74      0.8270 +/-0.017
+  circuit REMOVED entirely                 74      0.5000 +/-0.000
+MLP (8, 5) — 2 hidden layers              123      0.8389 +/-0.016
+MLP (13,) — 1 hidden layer                131      0.8313 +/-0.014
+MLP (5,) — 1 hidden layer                  51      0.8359 +/-0.016
+
+[1527s]  wrote controls.json

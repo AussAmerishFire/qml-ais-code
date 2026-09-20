@@ -1,0 +1,51 @@
+sleep prevention: active
+resuming with 3 runs on disk
+
+  N=1429 seed0: train kernel (1,020,306 pairs) ...
+      train  80.4%  eta   2.4 min
+      C=1.0  416 support vectors of 1429  -> val kernel (7,230,496 pairs)
+      val  11.3%  eta  88.9 min
+      val  22.4%  eta  71.7 min
+      val  33.5%  eta  60.0 min
+      val  44.5%  eta  47.9 min
+      val  55.6%  eta  41.3 min
+      val  66.7%  eta  33.6 min
+      val  77.7%  eta  23.1 min
+      val  88.8%  eta  11.7 min
+      val  99.9%  eta   0.2 min
+  [ 127.2 min] N=1429 seed0  val AUC 0.7292  drift 0.515  (127.2 min)
+
+  N=1429 seed1: train kernel (1,020,306 pairs) ...
+      train  80.4%  eta   5.4 min
+      C=10.0  403 support vectors of 1429  -> val kernel (7,004,543 pairs)
+      val  11.7%  eta 144.0 min
+      val  23.1%  eta 126.6 min
+      val  34.5%  eta 107.0 min
+      val  46.0%  eta  86.1 min
+      val  57.4%  eta  64.6 min
+      val  68.8%  eta  46.4 min
+      val  80.2%  eta  28.5 min
+      val  91.7%  eta  11.8 min
+  [ 294.2 min] N=1429 seed1  val AUC 0.7839  drift 0.636  (166.9 min)
+
+  N=1429 seed2: train kernel (1,020,306 pairs) ...
+      train  80.4%  eta   3.3 min
+      C=1.0  413 support vectors of 1429  -> val kernel (7,178,353 pairs)
+      val  11.4%  eta 111.6 min
+      val  22.6%  eta  97.0 min
+      val  33.7%  eta  83.4 min
+      val  44.9%  eta  71.0 min
+      val  56.0%  eta  58.0 min
+      val  67.1%  eta  42.2 min
+      val  78.3%  eta  58.9 min
+      val  89.4%  eta  93.0 min
+  [1123.5 min] N=1429 seed2  val AUC 0.7709  drift 0.532  (829.4 min)
+
+
+========================================================================
+QSVM vs the sweep (validation AUC)
+========================================================================
+  N=   571  QSVM 0.7522 ± 0.038   Q_reup 0.6237   Q_pre 0.5577   MLP_reup 0.6412   iforest 0.8349   rf 0.8260
+  N=  1429  QSVM 0.7613 ± 0.029   Q_reup 0.7402   Q_pre 0.6796   MLP_reup 0.7834   iforest 0.8431   rf 0.8472
+
+[18.73 h]  wrote qsvm_results.csv

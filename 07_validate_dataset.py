@@ -11,7 +11,12 @@ import numpy as np
 import pandas as pd
 
 FEATS = ["sog_mean", "sog_max_jump", "cog_turn_max", "dt_max",
-         "spd_mismatch_max", "crab_mean", "prev_silence_s", "crab_valid"]
+         "spd_mismatch_max", "crab_mean", "prev_silence_s",
+         # added 2026-09-07 -- these must face the same scaling, leakage and
+         # discriminative-power checks as the original seven, or they enter the
+         # study less verified than the features they sit beside.
+         "course_resid_mean", "mismatch_slope", "straightness", "mismatch_mean",
+         "crab_valid"]
 ATTACKS = ["drift", "jump", "gap", "speed_lie", "dark"]
 
 tr = pd.read_csv("dataset_train.csv")

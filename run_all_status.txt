@@ -1,0 +1,10 @@
+09-07 22:44:07  === run_all started ===
+09-07 22:44:07  starting 07_validate_dataset.py
+09-07 22:44:15  07_validate_dataset.py exit 0  (0.1 min)  -> validate_v2.log
+09-07 22:44:15  starting 09_independent_check.py
+09-07 22:46:21  09_independent_check.py exit 0  (2.1 min)  -> independent_v2.log
+09-07 22:46:21  starting 10_classical_baselines.py
+09-07 23:18:25  10_classical_baselines.py exit 0  (32.1 min)  -> baselines_v2.log
+09-07 23:18:25  starting 16_sweep.py
+09-08 10:27:28  16_sweep.py exit 0  (669 min)  -> sweep.log
+09-08 10:27:28  === run_all complete ===

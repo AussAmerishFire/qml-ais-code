@@ -1,0 +1,10 @@
+validation: 17,381 windows, 537 anomalous (3.09%) -- alert budget set to that rate
+
+  A_vqc    AUC 0.7958  [230s]
+  E_reup   AUC 0.8334  [114s]
+  C_pre    AUC 0.8425  [123s]
+  frozen   AUC 0.8333  [530s]
+  MLP(8, 5)  AUC 0.8191
+  MLP(5,)    AUC 0.8138
+
+wrote fig_q1_confusion.png

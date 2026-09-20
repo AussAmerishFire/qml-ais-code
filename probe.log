@@ -1,0 +1,34 @@
+rebuilding with 4 candidate features added ...
+STAGE 1: load and filter
+  raw                     8,156,509
+  after AIS filters       6,094,912
+  under way only          1,463,926   (-4,630,986 moored)
+  vessels >= 200 reports  1,256,434   (2,441 vessels)
+
+STAGE 3: inject anomalies
+  5,900 tracks, 2,653 attacked
+  allocation: speed_lie=49  drift=124  jump=595  gap=794  dark=1091
+  114,969 windows, 3,992 anomalous (3.47%)  [630s]
+
+train 84,912 / val 30,057  (vessel-disjoint)
+
+UNIVARIATE AUC -- how much does each feature separate, on its own?
+  feature               overall    drift   (0.5 = useless)
+  sog_mean               0.5252   0.5583
+  sog_max_jump           0.5789   0.5183
+  cog_turn_max           0.5960   0.6164
+  dt_max                 0.5736   0.5170
+  spd_mismatch_max       0.7258   0.5420
+  crab_mean              0.5776   0.6393
+  prev_silence_s         0.5878   0.5088
+  crab_valid             0.5065   0.5179
+  course_resid_mean      0.6370   0.6554  <-- NEW
+  mismatch_slope         0.5266   0.5152  <-- NEW
+  straightness           0.5135   0.5651  <-- NEW
+  mismatch_mean          0.7312   0.5628  <-- NEW
+
+RANDOM FOREST -- old features vs old + new (300 trees, depth 6)
+  old 8          AUC 0.7899   speed:0.968 jump:0.937 gap:0.958 dark:0.823 drift:0.526
+  old + new 12   AUC 0.8333   speed:0.993 jump:0.938 gap:0.960 dark:0.965 drift:0.578
+
+[646s]  wrote windows_labelled_v2.csv

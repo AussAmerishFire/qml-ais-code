@@ -1,0 +1,48 @@
+==========================================================================
+CLASSICAL BASELINES
+==========================================================================
+  train   68,296 windows  2,420 anomalous (3.54%)  1,462 vessels
+  val     17,381 windows    537 anomalous (3.09%)    364 vessels
+  test    29,292 windows  1,035 anomalous (3.53%)    609 vessels
+  [ok] zero vessel overlap between all three splits
+  [ok] 8 features, no NaN/inf, range [0.000, 3.142]
+
+--------------------------------------------------------------------------
+SELECTION  (validation split only -- test is not read here)
+--------------------------------------------------------------------------
+  rule      3 configs  best val AUC 0.7494  (cached)
+           -> {"feature": "spd_mismatch_max"}
+  iforest  12 configs  best val AUC 0.8269  (cached)
+           -> {"n_estimators": 200, "max_samples": 1024, "contamination": 0.02}
+  logreg   10 configs  best val AUC 0.8306  (cached)
+           -> {"C": 0.01, "class_weight": null}
+  gbt      12 configs  best val AUC 0.8216  (cached)
+           -> {"max_iter": 100, "max_depth": 3, "learning_rate": 0.05}
+  rf        9 configs  best val AUC 0.8659  (cached)
+           -> {"n_estimators": 300, "max_depth": 6, "class_weight": null}
+  mlp      12 configs  best val AUC 0.8441  (1120.1s)
+           -> {"alpha": 0.01, "lr": 0.01, "oversample": 0.35}
+
+--------------------------------------------------------------------------
+FINAL EVALUATION  (test split, read once)
+--------------------------------------------------------------------------
+
+model              test AUC            PR-AUC   prec@3.5%    recall
+  rf        0.7857 +/- 0.0012   0.3252 +/- 0.0053      0.338     0.335
+  gbt       0.7854 +/- 0.0013   0.3099 +/- 0.0048      0.310     0.307
+  mlp       0.7711 +/- 0.0107   0.3067 +/- 0.0179      0.335     0.332
+  logreg    0.7636 +/- 0.0000   0.2826 +/- 0.0000      0.298     0.295
+  iforest   0.7387 +/- 0.0027   0.1369 +/- 0.0037      0.213     0.211
+  rule      0.7113 +/- 0.0000   0.2510 +/- 0.0000      0.233     0.231
+
+Per-attack AUC (normals vs that attack only):
+attack   speed_lie  drift  jump   gap  dark
+model                                      
+rule         0.971  0.611 0.909 0.714 0.539
+gbt          0.964  0.602 0.913 0.935 0.789
+mlp          0.981  0.600 0.913 0.920 0.710
+rf           0.970  0.596 0.921 0.934 0.793
+logreg       0.976  0.589 0.906 0.898 0.722
+iforest      0.875  0.574 0.891 0.894 0.699
+
+wrote baseline_results.csv, baseline_per_attack.csv
