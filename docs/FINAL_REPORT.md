@@ -247,9 +247,17 @@ argue the field lacks, and it carries a control their paper does not: a
 frozen-gate ablation showing that training the quantum parameters made no
 measurable difference at any training-set size.
 
-The research question needs rewriting to match. Suggested direction:
-*"Quantum models need more data, not less: a controlled test of
-generalisation-bound predictions in maritime AIS anomaly detection."*
+**The research question was rewritten to match what was measured** (agreed
+2026-09-30, full statement in `RESEARCH_QUESTION.md`):
+
+> Under what conditions do quantum machine learning models outperform classical
+> models in detecting anomalous vessel behaviour in AIS data?
+
+Four sub-questions: the size-matched comparison and its inversion (SQ1); whether
+quantum beats the best classical models at all (SQ2, no); quantum kernels against
+variational circuits (SQ3, the deficit is optimisation, not feature maps); and
+whether any quantum-kernel advantage is possible here (SQ4, a measured ceiling).
+
 Primary finding the inversion; secondary that simple models beat every neural
-network, quantum or classical, when data is scarce; the
-re-uploading exception as the mechanism worth following up.
+network, quantum or classical, when data is scarce; the re-uploading exception as
+the mechanism worth following up.

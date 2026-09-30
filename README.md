@@ -1,7 +1,10 @@
 # Quantum machine learning for AIS maritime anomaly detection
 
-Do quantum machine-learning models detect anomalous vessel behaviour in AIS data
-better than classical models — and if so, under exactly what conditions?
+**Under what conditions do quantum machine learning models outperform classical
+models in detecting anomalous vessel behaviour in AIS data?**
+
+That is the study's research question, with four sub-questions and the evidence
+answering each set out in [`docs/RESEARCH_QUESTION.md`](docs/RESEARCH_QUESTION.md).
 
 The study started from Caro et al. (2022, *Nature Communications*), who bound the
 generalisation error of a quantum model with `T` trainable gates by `sqrt(T/N)`.
