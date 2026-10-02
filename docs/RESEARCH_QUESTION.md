@@ -95,7 +95,8 @@ quantum kernel describes the data more simply than any classical kernel, on 5 of
 5 seeds. That edge is gone by 1,429.
 
 Separately, quantum features added to Random Forest and Gradient Boosting made
-both **worse** on test, and behaved statistically like classical random features.
+both **worse** on test, and were never better than the best classical control
+built from the same inputs.
 
 *Evidence:* `RESULTS_FOLLOWUP.md` §1–2.
 

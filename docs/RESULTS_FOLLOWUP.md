@@ -35,7 +35,7 @@ Test AUC, mean of 10 seeds:
 - **+Q is below base in all 10 cells**: significantly for Random Forest at all five
   sizes (−0.010 to −0.024, every p ≤ 0.004) and for Gradient Boosting at three
   (N = 571, 14,286, 68,296).
-- **+Q behaves like classical random features.** Against +RFF, the matched
+- **+Q is never better than the best classical control.** Against +RFF, the matched
   classical random-feature control, no Random Forest difference is significant at
   any size. Adding *any* 16 random nonlinear features dilutes a tree ensemble,
   quantum or not.
@@ -116,8 +116,9 @@ count, so a 12-qubit map could leave more room.
 
 ## What this adds to the paper
 
-1. **Quantum features do not help the models industry uses.** They act like
-   classical random features and lower test AUC. There is no hybrid "quantum
+1. **Quantum features do not help the models industry uses.** They lower test
+   AUC and are never better than the best classical control built from the same
+   inputs. There is no hybrid "quantum
    feature + Random Forest" advantage on AIS data at 8 qubits.
 2. **The geometric difference puts a number on the ceiling.** A classical kernel
    is within a factor of about 3–4 of the quantum kernel on every possible task,

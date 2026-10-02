@@ -376,7 +376,8 @@ generalisation.
 % can at no more than g^2 times the complexity. On the real labels at 571 the
 % quantum kernel is simpler on 5 of 5 seeds; that edge is gone by 1,429.
 % Quantum features added to random forest and gradient boosting make both
-% WORSE, and behave like classical random features.
+% WORSE, and are never better than the best classical control (they beat the
+% random-Fourier control once: gradient boosting at N=571, p=0.037).
 % REPORT THE VALIDATION/TEST REVERSAL: on validation the quantum features beat
 % every control for random forest at large N; on test the same comparison
 % reversed. It is a methodological contribution, not an embarrassment.
@@ -517,6 +518,11 @@ generalisation.
 \section*{Acknowledgment}
 % Optional.
 
+% DRAFT ONLY: \nocite{*} lists every entry in refs.bib so the reference list
+% renders before the prose cites anything (an empty list is a LaTeX error).
+% DELETE this line once the text has its \cite commands, so the final paper
+% lists only the references it actually cites.
+\nocite{*}
 \bibliographystyle{IEEEtran}
 \bibliography{refs}
 

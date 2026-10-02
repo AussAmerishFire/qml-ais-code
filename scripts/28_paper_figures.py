@@ -425,8 +425,8 @@ def fig_qfeatures():
                  fontsize=10.5)
     ax.set_ylabel("AUC change vs. the plain model")
     ax.legend(loc="lower right", fontsize=8.2); tidy(ax)
-    fig.suptitle("Quantum features do not improve the models industry uses  ·  they behave like classical "
-                 "random features", fontsize=12.5, fontweight="bold", color=INK, y=1.03)
+    fig.suptitle("Quantum features do not improve the models industry uses  ·  never better than the "
+                 "best classical control", fontsize=12.5, fontweight="bold", color=INK, y=1.03)
     fig.tight_layout()
     save(fig, "21_quantum_features.png", "results/qfeat_results.csv · 10 paired seeds per point · bands = ±1 SE")
 

@@ -41,8 +41,8 @@ study. The Quantum Support Vector Machine is the only quantum model that does no
 collapse with scarce data, beating all seven neural networks at N = 571.
 
 **4. Two follow-ups closed off two hypotheses.** Quantum features do not improve
-Random Forest or Gradient Boosting — they behave like classical random features
-and lower test AUC. The geometric difference of Huang et al. (2021) puts a
+Random Forest or Gradient Boosting: they lower test AUC and are never better than
+the best classical random-feature control built from the same inputs. The geometric difference of Huang et al. (2021) puts a
 measured ceiling on any quantum-kernel advantage here: 2.9 at N = 571 against a
 maximum possible 23.9.
 

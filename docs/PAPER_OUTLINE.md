@@ -190,7 +190,8 @@ variational optimisation, not to quantum feature maps.
 **5.4 (SQ4) A measured ceiling, and a negative result for quantum features** —
 from `RESULTS_FOLLOWUP.md`; figures `20_geometric_difference` and `21_quantum_features`.
 Geometric difference 2.9 of 23.9 and 3.8 of 37.8. Quantum features make Random
-Forest and Gradient Boosting worse and behave like classical random features.
+Forest and Gradient Boosting worse and are never better than the best classical
+control (they beat the random-Fourier control once: gradient boosting, N = 571).
 **Report the validation/test reversal here** — it is a genuine methodological
 contribution, not an embarrassment.
 
