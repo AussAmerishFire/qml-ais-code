@@ -1,5 +1,7 @@
 # The 8 Features — full definitions
 
+> **Status (2026-10-02).** Describes the **original 8 features**. The study uses **12**; their definitions, as computed, are in `METHODS.md` Part 6. Kept for provenance — do not cite feature counts or definitions from this file.
+
 Every feature is computed over one **window** = 10 consecutive position reports
 from one vessel. Raw AIS gives us position, speed, course and heading per
 report; these features describe how those changed across the window.

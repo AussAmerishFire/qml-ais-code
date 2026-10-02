@@ -72,10 +72,13 @@ data/                dataset_train/val/test.csv   the built dataset
 results/             every measured run, as CSV or JSON — the experimental record
                      kernels/                    saved quantum kernel matrices
 
-figures/             the 14 paper figures, explained in figures/README.md
+figures/             21 figures, explained in figures/README.md
                      earlier/                    superseded exploration figures
 
 logs/                run logs, exactly as written during each run
+
+paper/               the paper in LaTeX (IEEE two-column): main.tex, refs.bib,
+                     generated tables, and the 15 figures it uses
 ```
 
 **Run everything from the repository root**, so that relative paths resolve:
@@ -94,7 +97,8 @@ logs/                run logs, exactly as written during each run
 | **[`docs/COMPLETE_RESULTS.md`](docs/COMPLETE_RESULTS.md)** | Every model × every size, test and validation, with a completeness audit |
 | **[`docs/QUANTUM_ADVANTAGE.md`](docs/QUANTUM_ADVANTAGE.md)** | Where quantum measurably won, kept strictly apart from where it *could* win |
 | **[`docs/RESULTS_FOLLOWUP.md`](docs/RESULTS_FOLLOWUP.md)** | Quantum features in Random Forest; the geometric-difference ceiling |
-| **[`figures/`](figures/)** | 14 figures, with a README explaining each |
+| **[`paper/`](paper/)** | The paper itself: LaTeX source, ready for Overleaf |
+| **[`figures/`](figures/)** | 21 figures, with a README explaining each |
 | **[`docs/THE_DOCUMENT.md`](docs/THE_DOCUMENT.md)** | Narrative walkthrough from raw data onward, with a glossary |
 | **[`docs/METHODS.md`](docs/METHODS.md)**, [`docs/DECISIONS.md`](docs/DECISIONS.md), [`docs/SENSITIVITY.md`](docs/SENSITIVITY.md) | Methods prose, every judgement call, threshold sweeps |
 | **[`docs/CITATIONS.md`](docs/CITATIONS.md)**, [`docs/CITATIONS_ROUND2.md`](docs/CITATIONS_ROUND2.md), [`docs/CITATIONS_ROUND3.md`](docs/CITATIONS_ROUND3.md) | References, each verified against Crossref/OpenAlex rather than recalled |
@@ -122,6 +126,8 @@ Two files are superseded and marked at the top: `docs/RESULTS_TABLES.md` and
 | `scripts/24_figures.py` | Writes all 14 figures |
 | `scripts/25_geometric_difference.py` | Huang et al. (2021) test: can any quantum kernel win here? |
 | `scripts/26_quantum_features_rf.py` | Quantum features inside Random Forest / Gradient Boosting |
+| `scripts/27_paper_tables.py` | Writes every table in the paper as LaTeX, from the result CSVs |
+| `scripts/28_paper_figures.py` | Writes figures 15–21: method overview, circuits, attack examples, test-set curves, follow-ups |
 
 Result files (`*_results.csv`, `*_selection.json`) are committed: they are the
 experimental record, not build artefacts.

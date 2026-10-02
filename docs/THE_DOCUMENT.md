@@ -1,5 +1,7 @@
 # THE DOCUMENT — everything about this study
 
+> **Status (2026-10-02).** Narrative written while the study was running; parts describe the **8-feature** stage and results that were later corrected. For current numbers use `COMPLETE_RESULTS.md`; for claims, `RESEARCH_QUESTION.md`.
+
 The single reference. Every term defined, every number derived, every figure
 explained. Written for the person writing the paper.
 

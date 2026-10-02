@@ -6,24 +6,32 @@ how the physics works. Nothing is "because I said so."
 
 ---
 
-## ⚑ CURRENT STATE — verified 2026-08-27, after the float64 rebuild
+## ⚑ CURRENT STATE — the 12-feature dataset every reported result uses
+
+Rebuilt 2026-09-07 with the four trend and direction features (Part 6). Numbers
+from `logs/pipeline_v2.log`.
 
 | | Windows | Vessels | Anomalous |
 |---|---:|---:|---|
-| train | 69,928 | 1,462 | 2,494 (3.6%) |
-| validation | 17,104 | 365 | 446 (2.6%) |
-| test | 27,940 | 608 | 1,111 (4.0%) |
-| **total** | **114,972** | **2,435** | **4,051 (3.5%)** |
+| train | 68,296 | 1,462 | 2,420 (3.54%) |
+| validation | 17,381 | 364 | 537 (3.09%) |
+| test | 29,292 | 609 | 1,035 (3.53%) |
+| **total** | **114,969** | **2,435** | **3,992 (3.47%)** |
 
-By attack: drift 1,198 · speed_lie 797 · jump 705 · dark 681 · gap 670
+By attack: drift 1,332 · jump 714 · dark 681 · gap 677 · speed_lie 588
 
-**Validation:** 42/42 property checks and 20/20 independent-recomputation checks
-pass. Two separate code paths produce identical features (worst disagreement
-0.0035%).
+Zero vessel overlap between any two splits, checked for all three pairs.
 
-**Note:** validation anomaly rate is 2.6% versus 4.0% in test — the vessel-level
-split is not stratified by label, so the rate varies. Acceptable but worth
-stating; if it matters for tuning, stratify the vessel assignment.
+**Validation:** 42/42 property checks (`scripts/07_validate_dataset.py`) and 22/22
+independent-recomputation checks (`scripts/09_independent_check.py`) pass.
+
+**Note:** the validation anomaly rate is 3.09% against 3.53% in test — the
+vessel-level split is not stratified by label, so the rate varies by split.
+Worth one sentence in the paper.
+
+> *Superseded:* the 2026-08-27 build this section previously described (69,928
+> / 17,104 / 27,940 windows, 8 features) is not the dataset any reported result
+> uses.
 
 ---
 
@@ -237,9 +245,48 @@ question entirely.
 
 ---
 
-# PART 6 — The 8 features
+# PART 6 — The 12 features
 
-Full definitions are in `FEATURES.md`. The design principle is what matters here:
+> **Updated 2026-10-02.** This part described the original 8 features. The study
+> uses 12: the original 7 engineered features that survived the correlation cut,
+> 4 trend and direction features added on 2026-09-07, and 1 missingness flag.
+> Definitions below are taken directly from `scripts/PIPELINE.py` (`per_step`,
+> `windows`, `split_and_scale`). `FEATURES.md` still describes the 8-feature
+> stage and is kept for provenance only.
+
+Every feature is computed over one window of 10 consecutive reports from one
+vessel, using differences **within** a single voyage only.
+
+| # | Feature | Definition | Transform | Targets |
+|---:|---|---|---|---|
+| 1 | `sog_mean` | Mean reported speed over ground | none | context |
+| 2 | `sog_max_jump` | Largest change in reported speed between consecutive reports | log | speed falsification |
+| 3 | `cog_turn_max` | Largest change in reported course between consecutive reports | log | jumps, manoeuvres |
+| 4 | `dt_max` | Longest interval between consecutive reports in the window | log | reporting gap |
+| 5 | `spd_mismatch_max` | Largest \|implied speed − reported speed\|, where implied speed is great-circle distance ÷ elapsed time | log | jump, speed falsification |
+| 6 | `crab_mean` | Mean angle between reported course and reported heading (missing values median-filled) | log | fabricated course data |
+| 7 | `prev_silence_s` | Silence preceding the voyage this window belongs to; non-zero only after a gap longer than 30 min split the track | log | transponder switch-off |
+| 8 | `course_resid_mean` † | Mean angle between reported course and the bearing actually travelled between consecutive positions | none (0–180°) | gradual drift |
+| 9 | `mismatch_slope` † | Least-squares slope of the speed mismatch across the window | signed log | gradual drift |
+| 10 | `straightness` † | Net displacement ÷ path length travelled, in [0, 1] | none | gradual drift |
+| 11 | `mismatch_mean` † | Mean \|implied speed − reported speed\| | log | jump, speed falsification |
+| 12 | `crab_valid` | 1 if heading was reported in the window, else 0 | none | missing heading |
+
+† added 2026-09-07, after `scripts/17_feature_probe.py` measured that every
+original feature was a mean or a max, and a max cannot see a gradual trend.
+
+**Transforms.** Logged features span orders of magnitude; without a log, angle
+encoding would map 99% of values to nearly the same rotation and that qubit would
+carry almost no information. `mismatch_slope` takes negative values, so it gets
+`sign(x)·log10(1+|x|)`. Every feature is then scaled to [0, π] using training-set
+statistics only.
+
+**What adding the four features did** (random forest, vessel-disjoint split):
+overall AUC 0.790 → 0.833; transponder switch-off 0.823 → 0.965; gradual drift
+0.526 → 0.578. The large gain was on switch-off, not drift, which was not the
+prediction. Drift remains the hard case.
+
+The design principle is what matters here:
 
 **Four of the five anomalies are detected as internal contradictions, not as
 deviations from a learned norm.**
@@ -256,7 +303,7 @@ normal looks like. It only needs the vessel's own two statements to disagree.
 the 99th percentile is **3.20**, the 99.9th is **11.27**. Real vessels agree
 with themselves.
 
-## Cutting 13 features to 8 — MEASURED
+## Cutting 13 features to 8 — MEASURED (the original stage; 4 were added later, see above)
 
 Thirteen were engineered, then Spearman correlation across 122,287 windows found
 seven pairs above |0.8| — pairs measuring the same thing twice. One survivor was

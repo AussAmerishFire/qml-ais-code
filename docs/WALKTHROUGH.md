@@ -1,5 +1,7 @@
 # Everything that happened, from Orange to now
 
+> **Status (2026-10-02).** A history of how the project developed, including false starts. Parts describe the **8-feature** stage. For current numbers use `COMPLETE_RESULTS.md`; for claims, `RESEARCH_QUESTION.md`.
+
 Written so you can follow, verify, and defend every step.
 
 ---

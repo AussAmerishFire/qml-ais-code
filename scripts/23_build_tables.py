@@ -56,7 +56,12 @@ QUANTUM = ["Q_reup", "Q_pre", "Q_frozen", "QSVM"]
 CLASSICAL = ["gbt", "rf", "logreg", "mlp", "MLP_reup", "MLP_pre", "MLP_frozen",
              "iforest", "rule"]
 TWIN = {"Q_pre": "MLP_pre", "Q_reup": "MLP_reup", "Q_frozen": "MLP_frozen"}
-QSVM_INFEASIBLE = {14286: "not computable here (~10 days)",
+# Cells the QSVM was never run for, with the reason. Printed as reasons, never as
+# numbers. N=2,857 was attempted and stopped: ~6 h per seed x 5 seeds against a
+# validation trend already flat from 571 to 1,429 (0.758 -> 0.763). Decided
+# 2026-10-02 to report it as not run rather than spend ~30 h of compute.
+QSVM_INFEASIBLE = {2857: "not run (~30 h for 5 seeds; trend flat from 571 to 1,429)",
+                   14286: "not computable here (~10 days)",
                    68296: "not computable here (37 GB kernel, 17 GB RAM)"}
 
 

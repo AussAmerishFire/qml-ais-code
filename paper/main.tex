@@ -94,35 +94,68 @@ generalisation.
 %-------------------------------------------------------------- related work
 \section{Related Work}
 \label{sec:related}
-% WRITE (~700 words), four paragraphs, each ending in what it leaves open:
-%   A. Maritime anomaly detection: riveiro2018review, pallotta2013tread,
-%      millefiori2016ou, nguyen2021geotracknet, nguyen2021traisformer,
-%      kroodsma2018fisheries, paolo2024satellite.
-%   B. Why tree ensembles are the practical baseline: grinsztajn2022trees,
-%      shwartzziv2022tabular.
-%   C. QML on classical data: havlicek2019supervised, huang2021power,
-%      perezsalinas2020reuploading, schuld2021encoding, biamonte2017qml.
-%   D. Bounds and benchmarking: caro2022generalization, gilfuster2024rethinking,
-%      bowles2024benchmarking, schuld2022advantage.
-%   E. Quantum anomaly detection specifically: corli2025anomaly,
-%      tscharke2025autoencoder, naaman2025adsb.
+% WRITE (~700 words). Each subsection ends with what it leaves open.
+
+\subsection{Maritime Anomaly Detection}
+% riveiro2018review, pallotta2013tread, millefiori2016ou, nguyen2021geotracknet,
+% nguyen2021traisformer, kroodsma2018fisheries, paolo2024satellite.
+
+\subsection{Tree Ensembles as the Practical Baseline}
+% grinsztajn2022trees, shwartzziv2022tabular. This is why gradient boosting and
+% random forest are the comparison that matters in Section V-B.
+
+\subsection{Quantum Machine Learning on Classical Data}
+% havlicek2019supervised, huang2021power, perezsalinas2020reuploading,
+% schuld2021encoding, biamonte2017qml, cerezo2021vqa.
+
+\subsection{Generalisation Bounds and Benchmarking}
+% caro2022generalization, gilfuster2024rethinking, bowles2024benchmarking,
+% schuld2022advantage.
+
+\subsection{Quantum Anomaly Detection}
+% corli2025anomaly, tscharke2025autoencoder, naaman2025adsb. None tests against
+% depth- and parameter-matched classical controls across training-set sizes --
+% that is the gap this paper fills.
 
 %------------------------------------------------------------------ the data
 \section{Data and Problem Setup}
 \label{sec:data}
-% WRITE (~800 words)
-%  - Source and scale: MarineCadastre 2023-01-01, 8,156,509 reports, one day of
-%    US coastal AIS (marinecadastre). Figure ~\ref{fig:pipeline}.
-%  - Windows of 10 consecutive reports per vessel; 12 engineered features
-%    (full definitions -> Appendix A).
-%  - VESSEL-DISJOINT SPLITS. State the zero-overlap check explicitly; this is
-%    the most important methodological detail in the paper.
-%  - Five injected attacks with severities derived from the clean data
-%    (Figure ~\ref{fig:attacks}). Gradual drift is 37.7% of test anomalies and
-%    the hardest to detect.
-%  - Imbalance 3.47%: why PR-AUC and a 3.5% alert budget are reported.
-%  - Figure ~\ref{fig:features}: what each feature achieves alone.
-%  - Why injected rather than observed anomalies (repeat in Limitations).
+% WRITE (~800 words). Figure ~\ref{fig:overview} shows the whole study at once.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{15_method_overview.png}
+  \caption{The study as one flow, with the real count at every stage. The data
+  pipeline (top) feeds the experiment (bottom).}
+  \label{fig:overview}
+\end{figure*}
+
+\subsection{Source Data and Windowing}
+% MarineCadastre 2023-01-01, 8,156,509 reports, one day of US coastal AIS
+% (marinecadastre). Filters, then windows of 10 consecutive reports per vessel.
+% Figure ~\ref{fig:pipeline}, Table ~\ref{tab:dataset}.
+
+\subsection{Features}
+% 12 features: 7 original, 4 trend/direction features added after a probe showed
+% a max cannot see a gradual trend, 1 missingness flag. Full definitions in
+% Appendix A (from docs/METHODS.md Part 6). Figure ~\ref{fig:features}: what
+% each feature achieves alone.
+
+\subsection{Vessel-Disjoint Splitting}
+% State the zero-overlap check explicitly. This is the most important
+% methodological detail in the paper: without it the same vessel appears in
+% train and test and every number is inflated.
+
+\subsection{Injected Attacks}
+% Five attacks with severities derived from measured properties of clean data.
+% Figure ~\ref{fig:attackex} shows each one on a real track; Figure
+% ~\ref{fig:attacks} the mix per split. Gradual drift is 37.7% of test anomalies
+% and the hardest to detect. Say why injected rather than observed (repeat in
+% Limitations).
+
+\subsection{Class Imbalance and the Alert Budget}
+% 3.47% anomalous: why PR-AUC and a 3.5% alert budget are reported alongside
+% AUC.
 
 \input{tables/tab_dataset}
 
@@ -133,6 +166,16 @@ generalisation.
   the vessel-disjoint split. No vessel appears in more than one split.}
   \label{fig:pipeline}
 \end{figure}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{17_attack_examples.png}
+  \caption{Each attack injected into the same real vessel track by the study's
+  own injection code. Shading marks the reports labelled anomalous. Panel titles
+  give the severity actually applied, which can fall below the requested value
+  where a physical cap binds (reported speed is capped at 39~kn).}
+  \label{fig:attackex}
+\end{figure*}
 
 \begin{figure}[t]
   \centering
@@ -157,10 +200,34 @@ generalisation.
 % WRITE (~1200 words). This section decides whether a reviewer believes the rest.
 
 \subsection{Hybrid quantum neural networks}
-% Three 8-qubit architectures: classical pre-layer (T=154), data re-uploading
-% (T=161, perezsalinas2020reuploading), frozen circuit (T=106, control).
-% State the forced Dense(12->8) pre-layer and that it is a handicap in the
-% conservative direction: quantum sees 8 compressed features, the twin sees 12.
+% Three 8-qubit architectures (Figure ~\ref{fig:circuits}): classical pre-layer
+% (T=154), data re-uploading (T=161, perezsalinas2020reuploading), frozen
+% circuit (T=106, control). State the forced Dense(12->8) pre-layer and that it
+% is a handicap in the conservative direction: quantum sees 8 compressed
+% features, the twin sees 12.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{16_circuits.png}
+  \caption{The three hybrid quantum architectures. Each compresses the 12
+  features to 8 with a trainable classical layer, encodes them as qubit
+  rotations, applies strongly entangling layers, and reads out Pauli-$Z$
+  expectations. The frozen circuit is identical to the classical pre-layer
+  model except that its 48 rotation angles are fixed at initialisation.}
+  \label{fig:circuits}
+\end{figure*}
+
+\subsubsection{Classical pre-layer}
+% Dense(12->8), angle embedding, two strongly entangling layers (48 angles),
+% sum of <Z>. T = 154.
+
+\subsubsection{Data re-uploading}
+% The input is re-encoded before each entangling layer (perezsalinas2020reuploading,
+% schuld2021encoding), linear readout. T = 161.
+
+\subsubsection{Frozen-circuit control}
+% Identical to the pre-layer model with the 48 rotation angles held at their
+% random initialisation. T = 106. Isolates what training the quantum gates adds.
 
 \subsection{Depth- and parameter-matched classical twins}
 % Matched on depth AND parameter count, classical side never lower (Table I).
@@ -213,14 +280,31 @@ generalisation.
 % TRAP: Caro's bound is an UPPER bound. Nothing here contradicts the theorem;
 % what fails is the inference drawn from it. Say so explicitly.
 
+\subsubsection{Quantum against matched twins}
+% Table ~\ref{tab:endpoints}, Figures ~\ref{fig:inversion}, ~\ref{fig:seeds}.
+
+\subsubsection{The crossover point}
+% 2,443 (frozen), 7,229 (pre-layer), 9,432 (re-uploading) windows; roughly 87,
+% 256 and 334 labelled anomalies. Interpolated between measured sizes, never
+% extrapolated beyond them.
+
+\subsubsection{Frozen-circuit ablation}
+% No significant difference at any size (every p >= 0.62 at 5 seeds; +0.004,
+% p = 1.000 at 10 seeds on test). Training the quantum angles adds nothing
+% measurable.
+
+\subsubsection{The data re-uploading exception}
+% Significant at neither endpoint. Connect to schuld2021encoding.
+
 \input{tables/tab_endpoints}
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{05_inversion.png}
-  \caption{Quantum minus its matched classical twin across five training-set
-  sizes (left) and at the two endpoints with 95\% confidence intervals
-  (right). The gap changes sign as training data grows.}
+  \includegraphics[width=\columnwidth]{19_inversion_test.png}
+  \caption{Test AUC of each hybrid quantum network minus its matched classical
+  twin, across five training-set sizes. Ticks mark the measured crossovers;
+  stars mark comparisons significant at $p<0.05$ over 10 paired seeds. The
+  pre-layer and frozen pairs invert; the re-uploading pair stays near zero.}
   \label{fig:inversion}
 \end{figure}
 
@@ -276,9 +360,11 @@ generalisation.
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=\textwidth]{04_learning_curves.png}
-  \caption{Learning curves for all 13 models across five training-set sizes,
-  with the anomaly rate held at 3.5\%. Bands are one standard error.}
+  \includegraphics[width=\textwidth]{18_learning_curves_test.png}
+  \caption{Learning curves on the held-out test set (29,292 windows from 609
+  vessels never seen in training), with the anomaly rate held at 3.5\%. Bands
+  are one standard error over five seeds. The quantum kernel is omitted because
+  it was scored on validation only; its results are in Figure~\ref{fig:kernel}.}
   \label{fig:curves}
 \end{figure*}
 
@@ -295,6 +381,37 @@ generalisation.
 % every control for random forest at large N; on test the same comparison
 % reversed. It is a methodological contribution, not an embarrassment.
 % Tables ~\ref{tab:geometric} and ~\ref{tab:qfeatures}.
+
+\subsubsection{Geometric difference}
+% Figure ~\ref{fig:geometric}, Table ~\ref{tab:geometric}.
+
+\subsubsection{Quantum features in tree ensembles}
+% Figure ~\ref{fig:qfeatures} (left, centre), Table ~\ref{tab:qfeatures}.
+
+\subsubsection{The validation/test reversal}
+% Figure ~\ref{fig:qfeatures} (right). Had only validation been examined, this
+% would have been reported as a quantum advantage.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{20_geometric_difference.png}
+  \caption{Left: the geometric difference between the quantum kernel and the
+  best classical kernel able to fit the data, against the largest value it
+  could take. Right: model complexity on the real anomaly labels; points above
+  the diagonal are where the quantum kernel describes the labels more simply.}
+  \label{fig:geometric}
+\end{figure*}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{21_quantum_features.png}
+  \caption{Quantum features added to random forest and gradient boosting,
+  against three classical controls computed from the same eight inputs (left,
+  centre). Right: for random forest the quantum features appear to help on
+  validation at large training sizes but hurt on the held-out test set at every
+  size.}
+  \label{fig:qfeatures}
+\end{figure*}
 
 \input{tables/tab_geometric}
 \input{tables/tab_qfeatures}
@@ -323,21 +440,26 @@ generalisation.
 \section{Discussion}
 \label{sec:discussion}
 % WRITE (~900 words)
-%  1. Optimisation, not generalisation: the kernel does not collapse, the
-%     variational models do. gilfuster2024rethinking on why uniform bounds do
-%     not tell the whole story. Barren plateaus as related context
-%     (larocca2025barren) -- but do not claim to have measured one.
-%  2. What the size constraint means: satellite AIS receivers, buoys, on-vessel
-%     hardware. Where it is legitimate, and where it is artificial.
-%  3. The ceiling: roughly a tenth of the theoretically possible advantage, and
-%     narrowing as data grows.
-%  4. Where advantage is proven and why AIS is not there: liu2021rigorous
-%     (structured data), huang2022experiments (quantum-native data),
-%     huang2021information (polynomial limits for classical data),
-%     tang2019quantum (dequantisation).
-%  5. Operational reading: the strongest quantum result lands on the most
-%     operationally meaningful attack -- under the size constraint, and still
-%     far behind the tree ensembles on that attack.
+
+\subsection{Optimisation, Not Generalisation}
+% The kernel does not collapse, the variational models do. gilfuster2024rethinking
+% on why uniform bounds do not tell the whole story. Barren plateaus as related
+% context (larocca2025barren) -- but do not claim to have measured one.
+
+\subsection{What the Size Constraint Means in Practice}
+% Satellite AIS receivers, buoys, on-vessel hardware. Where an equal-size
+% comparison is legitimate, and where it is artificial.
+
+\subsection{Where Quantum Advantage Is Proven, and Why AIS Is Not There}
+% The ceiling: roughly a tenth of the theoretically possible advantage, and
+% narrowing as data grows. liu2021rigorous (structured data),
+% huang2022experiments (quantum-native data), huang2021information (polynomial
+% limits for classical data), tang2019quantum (dequantisation).
+
+\subsection{Operational Significance}
+% The strongest quantum result lands on the most operationally meaningful attack
+% (transponder switch-off) -- under the size constraint, and still far behind
+% the tree ensembles on that attack.
 
 %----------------------------------------------------------------- limitations
 \section{Limitations}

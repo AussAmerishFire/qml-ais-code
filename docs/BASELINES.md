@@ -1,5 +1,7 @@
 # Classical baselines — what we compare against, and why each one is there
 
+> **Status (2026-10-02).** Parts of this file were written at the **8-feature** stage. The classical results every document now cites come from the 12-feature dataset: see `COMPLETE_RESULTS.md`. The protocol rules in §3 still apply.
+
 Every model below earns its place by answering a *different* question a reviewer
 will ask. None is decorative. Nothing here is preference; each choice is tied
 either to a published result or to a measured property of our dataset.

@@ -11,7 +11,7 @@ Seeds per cell (required: 5). ✔ complete · ✖ short · — not run by design
 | Hybrid Quantum Neural Network — data re-uploading | 5 ✔ | 5 ✔ | 5 ✔ | 5 ✔ | 5 ✔ |
 | Hybrid Quantum Neural Network — classical pre-layer | 5 ✔ | 5 ✔ | 5 ✔ | 5 ✔ | 5 ✔ |
 | Hybrid Quantum Neural Network — frozen circuit (control) | 5 ✔ | 5 ✔ | 5 ✔ | 5 ✔ | 5 ✔ |
-| Quantum Support Vector Machine | 5 ✔ | 5 ✔ | 0 ✖ | — | — |
+| Quantum Support Vector Machine | 5 ✔ | 5 ✔ | — | — | — |
 | Gradient Boosting | 5 ✔ | 5 ✔ | 5 ✔ | 5 ✔ | 5 ✔ |
 | Random Forest | 5 ✔ | 5 ✔ | 5 ✔ | 5 ✔ | 5 ✔ |
 | Logistic Regression | 5 ✔ | 5 ✔ | 5 ✔ | 5 ✔ | 5 ✔ |
@@ -22,7 +22,7 @@ Seeds per cell (required: 5). ✔ complete · ✖ short · — not run by design
 | Isolation Forest (no labels) | 5 ✔ | 5 ✔ | 5 ✔ | 5 ✔ | 5 ✔ |
 | Single-Threshold Rule (no labels) | 5 ✔ | 5 ✔ | 5 ✔ | 5 ✔ | 5 ✔ |
 
-**1 cell(s) incomplete — numbers below are PROVISIONAL.**
+**All cells complete.**
 
 60 runs were imported from `results/final_results.csv` rather than recomputed; on 60 matched cells the two pipelines agreed to a worst absolute difference of 0.00e+00.
 
@@ -36,7 +36,7 @@ Seeds per cell (required: 5). ✔ complete · ✖ short · — not run by design
 | Hybrid Quantum Neural Network — data re-uploading | 0.6525 | 0.7156 | 0.7517 | 0.7971 | 0.7989 |
 | Hybrid Quantum Neural Network — classical pre-layer | 0.5956 | 0.6783 | 0.7333 | 0.7946 | 0.7998 |
 | Hybrid Quantum Neural Network — frozen circuit (control) | 0.5861 | 0.6582 | 0.7287 | 0.8007 | 0.8056 |
-| Quantum Support Vector Machine | not run (validation only) | not run (validation only) | not run (validation only) | not computable here (~10 days) | not computable here (37 GB kernel, 17 GB RAM) |
+| Quantum Support Vector Machine | not run (validation only) | not run (validation only) | not run (~30 h for 5 seeds; trend flat from 571 to 1,429) | not computable here (~10 days) | not computable here (37 GB kernel, 17 GB RAM) |
 | Gradient Boosting | 0.7345 | 0.7499 | 0.7939 | **0.8202** | **0.8316** |
 | Random Forest | **0.7715** | **0.7876** | **0.8011** | 0.8200 | 0.8225 |
 | Logistic Regression | 0.7406 | 0.7640 | 0.7660 | 0.7955 | 0.8016 |
@@ -56,7 +56,7 @@ Seeds per cell (required: 5). ✔ complete · ✖ short · — not run by design
 | Hybrid Quantum Neural Network — data re-uploading | 0.6237 | 0.7402 | 0.7751 | 0.8641 | 0.8674 |
 | Hybrid Quantum Neural Network — classical pre-layer | 0.5577 | 0.6796 | 0.7544 | 0.8542 | 0.8573 |
 | Hybrid Quantum Neural Network — frozen circuit (control) | 0.5390 | 0.6667 | 0.7447 | 0.8542 | 0.8608 |
-| Quantum Support Vector Machine | 0.7578 | 0.7626 | not run (validation only) | not computable here (~10 days) | not computable here (37 GB kernel, 17 GB RAM) |
+| Quantum Support Vector Machine | 0.7578 | 0.7626 | not run (~30 h for 5 seeds; trend flat from 571 to 1,429) | not computable here (~10 days) | not computable here (37 GB kernel, 17 GB RAM) |
 | Gradient Boosting | 0.7650 | 0.8099 | 0.8339 | 0.8656 | 0.8722 |
 | Random Forest | 0.8260 | 0.8472 | **0.8621** | **0.8891** | **0.8950** |
 | Logistic Regression | 0.8348 | **0.8552** | 0.8482 | 0.8614 | 0.8489 |
@@ -132,6 +132,6 @@ Wilcoxon signed-rank. ✔ = p < 0.05. From `results/final_results.csv`.
 |---:|---:|---:|---|
 | 571 | 0.7578 ± 0.028 | 5 | measured |
 | 1,429 | 0.7626 ± 0.020 | 5 | measured |
-| 2,857 | — | 0 | pending |
+| 2,857 | — | 0 | not run (~30 h for 5 seeds; trend flat from 571 to 1,429) |
 | 14,286 | — | 0 | not computable here (~10 days) |
 | 68,296 | — | 0 | not computable here (37 GB kernel, 17 GB RAM) |

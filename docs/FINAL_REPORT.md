@@ -1,5 +1,20 @@
 # Final report — quantum machine learning for AIS maritime anomaly detection
 
+> **Status (2026-10-02).** This report was compiled on 2026-09-09 from the
+> endpoint runs. Everything since agrees with it and extends it:
+>
+> - **The full sweep** (`results/full_sweep_results.csv`, 300 runs, every model at
+>   every size on validation **and** test) confirms the inversion on the
+>   held-out test set and gives measured crossovers of 2,443 / 7,229 / 9,432
+>   windows. Every number: `COMPLETE_RESULTS.md`.
+> - **Two follow-up experiments** — the geometric-difference ceiling and quantum
+>   features inside tree models: `RESULTS_FOLLOWUP.md`.
+> - **The research question** was rewritten to match the evidence:
+>   `RESEARCH_QUESTION.md`.
+>
+> The 10-seed numbers below remain the ones to cite for the paired significance
+> tests. For anything else, prefer `COMPLETE_RESULTS.md`.
+
 Compiled 2026-09-09. Sources: `results/final_results.csv` (endpoint runs, test set),
 `results/sweep_results.csv` (230-run scarcity sweep, validation),
 `results/baseline_results.csv` (classical baselines, test set).

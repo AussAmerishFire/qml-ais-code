@@ -5,7 +5,7 @@ trained there, and nothing is extrapolated. Rerun it any time:
 
     python scripts/24_figures.py
 
-| # | Figure | Shows | Data | Changes after the running jobs finish? |
+| # | Figure | Shows | Data | Status |
 |---|---|---|---|---|
 | 01 | Data pipeline | 8.2M reports → 114,969 windows; vessel-disjoint splits | `logs/pipeline_v2.log`, dataset CSVs | No |
 | 02 | Attack composition | Share of each attack per split; drift is the largest | dataset CSVs | No |
@@ -21,13 +21,22 @@ trained there, and nothing is extrapolated. Rerun it any time:
 | 12 | Significance map | All 54 paired tests: 19 wins (full data), 6 losses (scarce) | `results/final_results.csv` | No |
 | 13 | Model ranking | Every model on test at full data: AUC, AUC without drift, PR-AUC | `results/final_results.csv`, `results/baseline_results.csv` | No |
 | 14 | Quantum kernel | QSVM against every model at N = 571 and 1,429 | 5 seeds | Data complete |
+| 15 | Method overview | The whole study as one flow, real counts at each stage | `logs/pipeline_v2.log` | Paper Fig. 1 |
+| 16 | Circuits | The three hybrid quantum architectures, structure verified with `qml.specs` | `scripts/16_sweep.py` | Paper |
+| 17 | Attack examples | Each attack injected into one real vessel track by the pipeline's own code | raw track + `scripts/PIPELINE.py` | Paper |
+| 18 | Learning curves, test | Fig. 04 on the held-out test set | `results/full_sweep_results.csv` | Paper (replaces 04) |
+| 19 | Inversion, test | Quantum minus twin on test at all five sizes, crossovers marked | `results/full_sweep_results.csv`, `results/final_results.csv` | Paper (replaces 05) |
+| 20 | Geometric difference | The measured ceiling on quantum-kernel advantage | `results/geometric_difference.csv` | Paper |
+| 21 | Quantum features | Quantum features in Random Forest / Gradient Boosting, and the validation/test reversal | `results/qfeat_results.csv` | Paper |
 
-`results/full_sweep_results.csv` finished on 2026-09-15 (300/300 runs). These figures
-still read the validation-only sources above, so every figure here is complete
-and correct as drawn; the full sweep additionally makes **test-set** versions of
-figures 04, 05, 06 and 08 possible. Not yet drawn: the two follow-up experiments
-in `docs/RESULTS_FOLLOWUP.md` (quantum features in Random Forest; geometric
-difference) have no figures yet.
+Figures 01–14 are written by `scripts/24_figures.py`; 15–21 by
+`scripts/28_paper_figures.py`, which imports the same style and palette. The paper
+uses 15 of them (see `paper/README.md`); 04 and 05 are superseded in the paper by
+their test-set versions, 18 and 19, and stay here as validation-set records.
+
+Every figure title that states a claim is checked against the data it draws. Where
+a title once overstated a result it was corrected, and the correction is logged
+below.
 
 ## Corrections made while building these (2026-09-14)
 
@@ -47,3 +56,12 @@ difference) have no figures yet.
   do; the re-uploading pair is not significant at either end.
 - **01**: 2,441 vessels pass the ≥ 200-report filter; 2,435 yield usable
   windows. Both are now stated.
+- **17** (2026-10-02): the speed-falsification panel was first labelled with the
+  *requested* multiplier (×3.4). The injector caps reported speed at 39 kn, so ×2.6
+  was actually applied. Every panel title in 17 is now measured from the injected
+  track, not taken from the configuration.
+- **19** (2026-10-02): the first title said all three pairs invert on test. The
+  re-uploading pair is +0.001 at both ends and significant at neither.
+- **21** (2026-10-02): "every addition hurts" became "no addition helps" (some
+  changes are near zero), and "helps on validation" became "appears to help on
+  validation at large N" (it is negative at N ≤ 1,429).
