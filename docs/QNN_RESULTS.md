@@ -1,5 +1,7 @@
 # The quantum models — architecture screen, controls, and where this leaves the study
 
+> **Status (2026-10-02).** Written at the architecture-screen stage, when the test split had not yet been opened. It has been since: the quantum models were scored on test at 10 seeds (`results/final_results.csv`) and at every size (`results/full_sweep_results.csv`). Current numbers: `COMPLETE_RESULTS.md`.
+
 All numbers here are **validation** AUC. The test split has not been opened for
 any quantum model. Scripts: `scripts/12_qnn.py`, `scripts/13_architectures.py`, `scripts/14_controls.py`.
 

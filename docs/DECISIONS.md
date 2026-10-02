@@ -232,9 +232,71 @@ precision, recall, F1.
 
 ---
 
-## Outstanding
+## Outstanding — status at 2026-10-02
 
-1. **Sensitivity sweeps** for `SOG ≥ 0.5`, the 1800 s split, `WINDOW = 10`
-2. **Residual `sog_mean` reverse-bias** (AUC 0.467) — declare as limitation
-3. **Ablation** on `crab_mean` and `sog_mean` — keep or drop, decided by model
-   performance rather than univariate AUC
+1. **Sensitivity sweeps** for `SOG ≥ 0.5`, the 1800 s split, `WINDOW = 10` —
+   **done**, nine full rebuilds: `SENSITIVITY.md`.
+2. **Residual `sog_mean` reverse-bias** (AUC 0.467) — **not revisited** after the
+   12-feature rebuild. Still to declare as a limitation if it persists.
+3. **Ablation** on `crab_mean` and `sog_mean` — **not run.** Both features were
+   kept in all 12-feature experiments.
+
+---
+
+## Decisions made during the experiments (2026-09 → 2026-10)
+
+Recorded with the reason at the time, in the order they were made.
+
+### Depth- and parameter-matched classical twins — **[MEASURED]**
+A two-seed architecture screen showed a quantum "win" that vanished once the
+classical comparison was matched on depth as well as parameter count. Every
+hybrid quantum network now has a twin with equal depth and at least as many
+parameters. Recorded in `QNN_RESULTS.md` §3.
+
+### Four trend and direction features added (2026-09-07) — **[MEASURED]**
+`scripts/17_feature_probe.py` showed every original feature was a mean or a max,
+which cannot see a gradual trend. `course_resid_mean`, `mismatch_slope`,
+`straightness` and `mismatch_mean` were added; the dataset was rebuilt and
+re-verified (42/42, 22/22). Definitions: `METHODS.md` Part 6.
+
+### Fixed gradient-step budget, not fixed epochs — **[DERIVED]**
+At a fixed epoch count a model trained on 571 windows receives about 120× fewer
+updates than one trained on 68,296, which would confound the scarcity comparison
+with under-training. Every neural model gets 640 gradient steps at every size.
+
+### Ten seeds at the endpoints — **[DERIVED]**
+A two-sided Wilcoxon signed-rank test on 5 paired seeds cannot reach p < 0.05
+(floor 0.0625). The comparisons the paper leans on were re-run at 10 seeds
+(floor 0.002). `RESULTS_SWEEP.md` §4.
+
+### No extrapolation anywhere — **[JUDGMENT]**
+An earlier table filled unmeasured cells with power-law extrapolation, and one
+fit predicted AUC above 1.0. All extrapolated values were removed; unmeasured
+cells are reported with the reason they were not measured.
+
+### Quantum kernel stops at N = 1,429 — **[MEASURED]**
+Kernel cost grows with N². Measured: ~6 h per seed at 2,857, ~2 days at 14,286,
+and a 37 GB kernel matrix at 68,296 against 17 GB of RAM. N = 2,857 was attempted
+and stopped; with the trend flat from 571 to 1,429 (0.758 → 0.763), it is reported
+as not run rather than spend ~30 h. Decided 2026-10-02.
+
+### The "unconstrained" MLP is a 71-parameter network — **[MEASURED]**
+The classical MLP baseline is 12-5-1 with 71 parameters, fewer than any hybrid
+quantum network. It was mislabelled "unconstrained" in early drafts; relabelled
+everywhere, and a parameter-efficiency claim was ruled out.
+
+### Two follow-up experiments — **[JUDGMENT]**
+To test where quantum *could* win: the geometric difference of Huang et al.
+(2021), and quantum features inside Random Forest and Gradient Boosting with
+three classical random-feature controls. `RESULTS_FOLLOWUP.md`.
+
+### Research question rewritten (2026-09-30) — **[MEASURED]**
+The original question asked whether quantum models generalise better from few
+labels. They do not. The question was changed to "under what conditions do
+quantum models outperform classical models", to match the evidence rather than
+the expectation. `RESEARCH_QUESTION.md`.
+
+### Repository reorganised (2026-09-20) — **[JUDGMENT]**
+Into `docs/`, `scripts/`, `data/`, `results/`, `figures/`, `logs/`, `paper/`.
+Every path rewritten; verified by rebuilding the tables byte-identical and
+re-running the 42 dataset checks.

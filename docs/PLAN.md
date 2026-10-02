@@ -1,5 +1,7 @@
 # Project Plan — plain English
 
+> **Status (2026-10-02).** The original project plan, kept as a record of what was intended. The study changed course where the evidence required it — most importantly the research question, which is now in `RESEARCH_QUESTION.md`.
+
 You are writing the paper, so every step below says three things:
 **what it means**, **why it's needed**, and **what it gives you to write about**.
 

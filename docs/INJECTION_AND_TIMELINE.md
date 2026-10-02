@@ -1,5 +1,11 @@
 # Injection Parameters & Data Timeline
 
+> **Status (2026-10-02).** Updated to the 12-feature dataset every reported result
+> uses (`logs/pipeline_v2.log`). Earlier values in this file came from the
+> superseded 8-feature build. Changed: realised severities, the per-attack AUC
+> table, window counts, the final splits, and the gap range, which was printed as
+> 300 s while the code has always used 500 s (`GAP_S` in `scripts/PIPELINE.py`).
+
 ---
 
 # TABLE 1 — What each attack changes, and on what basis
@@ -23,11 +29,11 @@ invented constant.
 
 | Attack | Field(s) modified | Mechanism | Severity range | Realised median | Basis for the range |
 |---|---|---|---|---|---|
-| **drift** | `LAT`, `LON` | positions offset along a random bearing, growing as `(i/n)^1.5` across the track. Reported SOG untouched. | 100–3,000 m | 1,651 m | **[JUDGMENT]** — sub-km to a few km keeps the track plausible, which is the point of gradual spoofing |
-| **jump** | `LAT`, `LON` | single instantaneous displacement at a random point; the track continues from the new position | 500–20,000 m | 9,368 m | **[JUDGMENT]** — spans "barely visible" to "obviously wrong" so difficulty varies |
-| **gap** | rows deleted | consecutive reports removed until the target silence accumulates | 300–1,700 s | 957 s | **[CONSTRAINED]** — must stay **below** `GAP_BREAK_S`=1800 s or the pipeline splits the track and the anomaly disappears |
-| **speed_lie** | `SOG` | reported speed multiplied or divided by a factor; positions untouched | ×1.8–5.0 | ×3.2 | **[JUDGMENT]** — factor chosen from available headroom so neither the 0.5 kn floor nor 39 kn ceiling is hit |
-| **dark** | rows deleted | long stretch removed, **exceeding** the split threshold, so the track breaks and the second half carries a large preceding silence | 3,600–21,600 s | 13,042 s | **[CONSTRAINED]** — must **exceed** `GAP_BREAK_S` to register as a track-level event |
+| **drift** | `LAT`, `LON` | positions offset along a random bearing, growing as `(i/n)^1.5` across the track. Reported SOG untouched. | 100–3,000 m | 1,300 m | **[JUDGMENT]** — sub-km to a few km keeps the track plausible, which is the point of gradual spoofing |
+| **jump** | `LAT`, `LON` | single instantaneous displacement at a random point; the track continues from the new position | 500–20,000 m | 9,838 m | **[JUDGMENT]** — spans "barely visible" to "obviously wrong" so difficulty varies |
+| **gap** | rows deleted | consecutive reports removed until the target silence accumulates | 500–1,700 s | 1,093 s | **[CONSTRAINED]** — must stay **below** `GAP_BREAK_S`=1800 s or the pipeline splits the track and the anomaly disappears |
+| **speed_lie** | `SOG` | reported speed multiplied or divided by a factor; positions untouched | ×1.8–5.0 | ×2.8 | **[JUDGMENT]** — factor chosen from available headroom so neither the 0.5 kn floor nor 39 kn ceiling is hit |
+| **dark** | rows deleted | long stretch removed, **exceeding** the split threshold, so the track breaks and the second half carries a large preceding silence | 3,600–21,600 s | 13,108 s | **[CONSTRAINED]** — must **exceed** `GAP_BREAK_S` to register as a track-level event |
 
 ## Why each attack is detectable — the causal chain
 
@@ -37,11 +43,11 @@ normal vessel behaviour maintains:
 
 | Attack | What breaks | Feature that catches it | AUC |
 |---|---|---|---|
-| **jump** | positions imply a speed the vessel never reported | `spd_mismatch_max` | **0.932** |
-| **speed_lie** | reported speed contradicts the vessel's own positions | `spd_mismatch_max` | **0.982** |
-| **gap** | reporting interval violates the Class A 2–10 s norm | `dt_max` | **0.915** |
-| **dark** | a voyage begins after hours of unexplained silence | `prev_silence_s` | **0.778** |
-| **drift** | *almost nothing* — that is the design | best is 0.583 | **hard case** |
+| **jump** | positions imply a speed the vessel never reported | `spd_mismatch_max` | **0.929** |
+| **speed_lie** | reported speed contradicts the vessel's own positions | `spd_mismatch_max` | **0.976** (`mismatch_mean` 0.994) |
+| **gap** | reporting interval violates the Class A 2–10 s norm | `dt_max` | **0.930** |
+| **dark** | a voyage begins after hours of unexplained silence | `prev_silence_s` | **0.772** (`straightness` 0.779) |
+| **drift** | *almost nothing* — that is the design | best is `course_resid_mean`, 0.562 | **hard case** |
 
 The key insight is that **four of five are internal contradictions**, not
 deviations from a learned norm. A spoofer must keep position, speed, course and
@@ -53,6 +59,10 @@ speed stays plausible at every step. It is the attack that requires a model
 rather than a threshold, and it is where the quantum-vs-classical comparison
 will actually be decided.
 
+*Outcome:* it was not decided there. Drift is unsolved by every model in the
+study, quantum or classical, at 0.61–0.66 test AUC on full data — including a
+zero-parameter threshold rule. See `COMPLETE_RESULTS.md` §7.
+
 ## Attack allocation
 
 Attacks differ enormously in how many *windows* one attacked track produces,
@@ -62,13 +72,13 @@ imbalance, so tracks are allocated **inversely to measured yield**:
 
 | Attack | Relative track weight | Windows produced |
 |---|---:|---:|
-| speed_lie | 1.0 | 835 |
-| drift | 2.5 | 1,198 |
-| jump | 12.0 | 705 |
-| gap | 16.0 | 678 |
-| dark | 22.0 | 673 |
+| speed_lie | 1.0 | 588 |
+| drift | 2.5 | 1,332 |
+| jump | 12.0 | 714 |
+| gap | 16.0 | 677 |
+| dark | 22.0 | 681 |
 
-Final imbalance: **1.8:1**.
+Final imbalance: **2.3:1** (drift 1,332 against speed_lie 588).
 
 ---
 
@@ -83,10 +93,10 @@ Final imbalance: **1.8:1**.
 | 4 | **Under way (`SOG ≥ 0.5`)** | **1,463,926** | **−4,630,986** | 17.9% | 5,150 |
 | 5 | Vessels with ≥200 reports | 1,256,434 | −207,492 | 15.4% | 2,441 |
 | 6 | Split into voyages at 30-min silences | 7,935 tracks | — | — | 2,441 |
-| 7 | Tracks with ≥10 reports | 5,928 tracks | −2,007 | — | 2,441 |
-| 8 | **Windowed** (10 reports, stride 10) | **~122,371 windows** | ÷10 | — | 2,441 |
-| 9 | After injection (gap/dark delete rows) | 115,107 windows | −7,264 | — | 2,435 |
-| 10 | Split by vessel | 115,107 | 0 | — | 2,435 |
+| 7 | Tracks eligible for injection (2,653 attacked) | 5,900 tracks | — | — | 2,441 |
+| 8 | **Windowed** (10 reports, stride 10) | not logged in this build | ÷10 | — | 2,441 |
+| 9 | After injection, 77 corrupt normal windows dropped | **114,969 windows** | — | — | 2,435 |
+| 10 | Split by vessel | 114,969 | 0 | — | 2,435 |
 
 ## Step-by-step notes
 
@@ -104,10 +114,10 @@ so attacked tracks yield slightly fewer windows.
 
 | Split | Windows | Vessels | Anomalous |
 |---|---:|---:|---|
-| train | 69,712 | 1,462 | 2,496 (3.6%) |
-| val | 16,511 | 365 | 528 (3.2%) |
-| test | 28,884 | 608 | 1,065 (3.7%) |
-| **total** | **115,107** | **2,435** | **4,089 (3.6%)** |
+| train | 68,296 | 1,462 | 2,420 (3.54%) |
+| val | 17,381 | 364 | 537 (3.09%) |
+| test | 29,292 | 609 | 1,035 (3.53%) |
+| **total** | **114,969** | **2,435** | **3,992 (3.47%)** |
 
 Vessel overlap between any two splits: **0**.
 

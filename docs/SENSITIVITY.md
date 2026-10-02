@@ -1,5 +1,7 @@
 # Sensitivity Sweep Results
 
+> **Status (2026-10-02).** Measured on the original 7 engineered features (`scripts/08_sensitivity_sweep.py`). The three thresholds it tests were unchanged by the 2026-09-07 rebuild, so its conclusions about them stand, but the four features added then were not part of this sweep.
+
 Three preprocessing thresholds had no external justification. Each was swept
 across three values, rebuilding the entire pipeline from raw AIS each time
 (9 full rebuilds, 2,200 tracks each, identical random seed).

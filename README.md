@@ -12,10 +12,12 @@ The inference people draw is that quantum models should hold up better than
 classical models when training data is scarce. **This study tested that directly,
 against depth- and parameter-matched classical twins, and found the opposite.**
 
-**Status: data collection complete.** 1,050 measured training runs across 13
+**Status: data collection complete.** 1,222 recorded model fits across 13
 model families, five training-set sizes and two follow-up experiments. Every
 number in every document is computed from the result CSVs at build time. Nothing
 is extrapolated.
+
+<sub>Model fits by source: scarcity sweep and tuning grid 230 · baseline sweep 100 · 10-seed endpoints 120 · full sweep 240 (60 more reused from the endpoints, not re-run) · quantum kernel 10 · quantum-features experiment 500 · full-data baselines 22.</sub>
 
 ---
 

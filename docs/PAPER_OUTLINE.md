@@ -40,7 +40,7 @@ number, the qualifier, the conclusion. Structured skeleton:
 > injected attack types, vessel-disjoint splits. Three hybrid quantum neural
 > networks against depth- and parameter-matched classical twins, a quantum
 > kernel, and six classical baselines, across five training-set sizes from 571 to
-> 68,296 windows; 1,050 training runs; paired Wilcoxon tests over 10 seeds.
+> 68,296 windows; 1,222 model fits; paired Wilcoxon tests over 10 seeds.
 > **Results.** The gap inverts with training-set size, opposite to the bound's
 > popular inference: [numbers]. No quantum model beats gradient boosting at any
 > size [numbers]. The quantum kernel does not collapse when data is scarce,
@@ -71,7 +71,7 @@ number, the qualifier, the conclusion. Structured skeleton:
    from `RESEARCH_QUESTION.md`.
 6. **Contributions** — a five-item list:
    - a controlled comparison at five training-set sizes with depth- and
-     parameter-matched classical twins, 1,050 runs;
+     parameter-matched classical twins, 1,222 model fits;
    - evidence that the quantum-classical gap **inverts** with data size, opposite
      to the bound's popular inference, replicated across two architectures;
    - a frozen-circuit ablation isolating what trainable quantum gates contribute;
