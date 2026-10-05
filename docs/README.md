@@ -1,10 +1,11 @@
 # Documents — what to read, in order
 
-Twenty-three documents. You do not need all of them. Pick the row that matches why
+Twenty-four documents. You do not need all of them. Pick the row that matches why
 you are here.
 
 | If you want to… | Read |
 |---|---|
+| **Understand everything that happened, start to finish** | **`STUDY_EXPLAINED.md`** |
 | Understand the study in one sitting | `FINAL_REPORT.md` |
 | Know what the paper is asking and claiming | `RESEARCH_QUESTION.md` |
 | Write the paper | `PAPER_OUTLINE.md` |

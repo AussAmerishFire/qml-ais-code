@@ -203,8 +203,11 @@ measured (0.6554 univariate), but drift remains unsolved.
 
 ## 6. Limitations to declare
 
-- **Tuning budget of 2 configurations per model**, cut from 8 against a compute
-  window. Equal on both sides, but small; the paper must say so.
+- **Tuning budget of 2 configurations per model** for the quantum models and
+  their twins, cut from 8 against a compute window. Equal between each quantum
+  model and its twin, but small. The classical baselines were tuned over 9–12
+  configurations each (`scripts/10_classical_baselines.py`), which favours the
+  classical side; the paper must say so. *(Asymmetry identified 2026-10-05.)*
 - **`MLP_frozen` is unstable** — seed standard deviation 0.059 at full data and
   up to 0.149 in the sweep. Its gap is significant (p=0.002) but that instability
   should be stated alongside it.
@@ -222,9 +225,13 @@ measured (0.6554 univariate), but drift remains unsolved.
   this 71-parameter baseline "unconstrained"; that label was wrong and has been
   corrected (2026-09-17).
 - **8-qubit noiseless simulation**, not hardware. No noise model.
-- **Test read twice** — once by the classical baselines, once by the endpoint
-  runs. No selection ever occurred on test, which is what the hold-out rule
-  protects, but the paper should state both reads.
+- **The test set was scored by several experiments** — the classical baselines,
+  the endpoint runs, the full sweep and the quantum-features experiment. No
+  setting was ever chosen on it, which is what the hold-out rule protects, but
+  the paper should state it.
+- **Median imputation** of missing feature values used statistics from all
+  windows before the split. No labels are involved, but it is a small leak of
+  statistics across splits. *(Identified 2026-10-05.)*
 - **Injected anomalies, not observed ones.** Real spoofing may differ.
 - **One day of US coastal AIS.** No seasonal or geographic generalisation claim.
 

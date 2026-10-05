@@ -229,10 +229,12 @@ falsification 0.998, the study's highest single score; drift unsolved at
 
 The five non-claims from `RESEARCH_QUESTION.md`, plus:
 
-- tuning budget of two configurations per model, equal on both sides but small;
+- tuning budget of two configurations for each quantum model and its twin, while
+  the classical baselines had 9–12 (favours classical; say so);
 - `MLP_frozen` instability (seed standard deviation 0.059);
-- the test set was read twice (baselines and endpoint runs) — no selection ever
-  occurred on it, but say so;
+- the test set was scored by several experiments, but no setting was ever chosen
+  on it;
+- median imputation used statistics from all windows before the split (no labels);
 - the quantum kernel was not run at 2,857 windows and is reported as not run;
 - injected anomalies; one day of US coastal AIS; 8-qubit noiseless simulation.
 
