@@ -33,7 +33,7 @@
 \begin{document}
 
 \title{Quantum Models Need More Data, Not Less: A Controlled Test of
-Generalisation-Bound Predictions in Maritime AIS Anomaly Detection}
+Generalization-Bound Predictions in Maritime AIS Anomaly Detection}
 
 \author{Jonathan Thomas% <- affiliation and contact go here
 \thanks{Code, data and every result file: \url{https://github.com/AussAmerishFire/qml-ais-code}}}
@@ -43,53 +43,127 @@ Generalisation-Bound Predictions in Maritime AIS Anomaly Detection}
 
 %------------------------------------------------------------------ abstract
 \begin{abstract}
-% WRITE (200--250 words), in this order:
-%   Background  - AIS is the backbone of maritime surveillance; it can be
-%                 falsified or switched off.
-%   Gap         - QML is argued to generalise from fewer examples than a
-%                 classical model of the same size (sqrt(T/N), Caro et al.),
-%                 but is rarely tested against matched classical controls.
-%   Method      - 114,969 windows from 8.2M AIS reports, five injected attacks,
-%                 vessel-disjoint splits; three HQNNs vs depth- and
-%                 parameter-matched twins, a quantum kernel, six classical
-%                 baselines, five training sizes, 1,222 model fits, Wilcoxon over
-%                 10 seeds.
-%   Results     - the gap INVERTS with size (19 significant wins at full data,
-%                 6 losses when scarce); no quantum model beats gradient
-%                 boosting (0.8316 vs 0.8074); the quantum kernel does not
-%                 collapse, locating the deficit in variational optimisation;
-%                 geometric difference 2.9 of a possible 23.9.
-%   Conclusion  - under a size constraint and with enough data quantum wins;
-%                 unconstrained, it does not.
-% TRAP: no sentence here may promise an advantage the results do not show.
+% WORKING DRAFT -- revise this last, once every other section is final.
+% 219 words; IEEE journals allow up to 250. Every number is from
+% docs/COMPLETE_RESULTS.md or results/final_results.csv.
+The Automatic Identification System (AIS) underpins maritime surveillance, yet
+vessels can falsify their reports or switch off their transponders. Labeled
+examples of such behavior are scarce, and quantum machine learning is often
+expected to help in exactly this regime: generalization bounds for quantum
+models scale with the number of trainable gates, suggesting that small quantum
+models should learn well from few examples. We test this expectation under
+controlled conditions. From 8.2 million AIS reports we construct 114,969
+ten-report windows described by twelve engineered features, and inject five
+attack types into 3.47\% of them. We compare three 8-qubit hybrid quantum neural
+networks against classical twins matched in depth and parameter count, a
+quantum-kernel support vector machine, and six classical baselines, at five
+training-set sizes from 571 to 68,296 windows, using vessel-disjoint splits and
+1,222 model fits. Against their matched twins, the quantum networks are
+significantly worse when training data are scarce and significantly better when
+they are plentiful: no significant wins and six losses at 571 windows, nineteen
+wins and no losses at 68,296, with crossovers between 2,443 and 9,432 windows.
+No quantum model outperforms gradient boosting at any size (test AUC 0.832
+versus 0.807). The quantum kernel does not degrade with scarce data, which
+locates the deficit in variational optimization, and the geometric difference
+between quantum and classical kernels reaches only about one tenth of its
+theoretical maximum.
 \end{abstract}
 
 \begin{IEEEkeywords}
 Quantum machine learning, anomaly detection, maritime surveillance, Automatic
 Identification System, quantum kernels, variational quantum circuits,
-generalisation.
+generalization.
 \end{IEEEkeywords}
 
 %--------------------------------------------------------------- introduction
 \section{Introduction}
 \label{sec:intro}
-% WRITE (~800 words)
-%  1. Why AIS anomaly detection matters. Dark vessels, sanctions evasion,
-%     illegal fishing. Cite paolo2024satellite (most industrial fishing vessels
-%     are not publicly tracked), welch2022unseen.
-%  2. What is used in practice: rules, then tree ensembles on engineered
-%     features, then deep learning on raw tracks. riveiro2018review,
-%     kroodsma2018fisheries, nguyen2021geotracknet, grinsztajn2022trees.
-%  3. Why quantum is worth testing here: caro2022generalization bounds the
-%     generalisation gap by sqrt(T/N); labelled maritime anomalies are scarce,
-%     so this is the regime that matters operationally.
-%  4. The gap: QML results frequently lack matched classical controls
-%     (bowles2024benchmarking); schuld2022advantage argues "under what
-%     conditions" is the better question than "is quantum better".
-%  5. This paper: state the research question and the four sub-questions
-%     verbatim from docs/RESEARCH_QUESTION.md.
-%  6. Contributions, as a five-item list (see docs/PAPER_OUTLINE.md).
-% TRAP: do not promise an advantage here. State the question, not the hope.
+% DRAFT -- rewrite in your own words before submission. ~830 words.
+
+\IEEEPARstart{T}{he} Automatic Identification System (AIS) requires large
+commercial vessels to broadcast their identity, position, speed and course at
+intervals of seconds to minutes, and it has become the primary data source for
+maritime surveillance. Because these broadcasts are self-reported, they can be
+manipulated: a vessel can transmit false positions, misreport its speed, or
+switch its transponder off entirely. Such behavior conceals sanctions evasion,
+illegal fishing and unsafe operation. Satellite imagery shows that a large share
+of industrial activity at sea is absent from public tracking
+systems~\cite{paolo2024satellite}, and deliberate disabling of AIS concentrates
+in identifiable hot spots~\cite{welch2022unseen}.
+
+Detecting these anomalies automatically is an established
+problem~\cite{riveiro2018review}. Approaches range from statistical models of
+normal traffic~\cite{pallotta2013tread,millefiori2016ou} to deep networks
+trained on raw trajectories~\cite{kroodsma2018fisheries,nguyen2021geotracknet}.
+On engineered tabular features, tree ensembles such as gradient boosting remain
+difficult to outperform~\cite{grinsztajn2022trees,shwartzziv2022tabular}. All of
+these methods share one constraint: they learn from labeled examples, and
+confirmed cases of spoofing or transponder switch-off are rare and costly to
+verify.
+
+Quantum machine learning has been proposed as a way to learn from such limited
+data~\cite{biamonte2017qml,havlicek2019supervised}. Caro
+\textit{et al.}~\cite{caro2022generalization} showed that the generalization
+error of a quantum model with $T$ trainable gates, trained on $N$ examples, is
+bounded by approximately $\sqrt{T/N}$. A natural reading of this result is that
+small quantum models should generalize well from few examples, and therefore
+that quantum machine learning should be most useful precisely when labels are
+scarce. Maritime anomaly detection is a direct test of that reading: labels are
+scarce, missed detections are costly, and the inputs are low-dimensional enough
+to be encoded on a small number of qubits.
+
+Whether quantum models deliver this advantage in practice is unclear. A
+large-scale benchmark found that standard classical models systematically
+outperformed the quantum classifiers it tested~\cite{bowles2024benchmarking},
+and it has been argued that asking \emph{under what conditions} quantum models
+behave differently is more informative than asking whether they are
+better~\cite{schuld2022advantage}. Quantum approaches to anomaly detection have
+been surveyed~\cite{corli2025anomaly} and applied to multivariate time series
+and to aviation surveillance data~\cite{tscharke2025autoencoder,naaman2025adsb}.
+We are not aware of a study that compares quantum models on vessel-tracking data
+against classical controls matched in depth and parameter count, across a range
+of training-set sizes.
+
+This paper asks: \emph{under what conditions do quantum machine learning models
+outperform classical models in detecting anomalous vessel behavior in AIS data?}
+We address four sub-questions:
+\begin{enumerate}[\IEEEsetlabelwidth{(SQ4)}]
+  \item[(SQ1)] Against a classical model of equal depth and parameter count,
+  does the comparison depend on training-set size?
+  \item[(SQ2)] Do quantum models outperform the strongest classical models?
+  \item[(SQ3)] Do quantum kernels behave differently from variational quantum
+  circuits?
+  \item[(SQ4)] Is there a measurable ceiling on quantum advantage for these data?
+\end{enumerate}
+
+Our contributions are as follows.
+\begin{itemize}
+  \item A controlled comparison of three 8-qubit hybrid quantum neural networks
+  against classical twins matched in depth and parameter count, a quantum-kernel
+  support vector machine, and six classical baselines, at five training-set
+  sizes spanning a 120-fold range, using vessel-disjoint splits and 1,222 model
+  fits.
+  \item Evidence that the quantum--classical gap inverts with training-set size,
+  in the direction opposite to the common reading of the bound: the quantum
+  models are significantly worse with scarce data and significantly better with
+  plentiful data, in two of three architectures.
+  \item A frozen-circuit ablation showing that training the quantum gates makes
+  no measurable difference at any training-set size, and a comparison with a
+  quantum kernel that locates the scarce-data deficit in variational
+  optimization rather than in quantum feature maps.
+  \item A measured ceiling on quantum-kernel advantage for these data, using the
+  geometric difference of Huang \textit{et al.}~\cite{huang2021power}, and a
+  negative result for quantum features added to the tree ensembles used in
+  practice.
+  \item A public release of the data pipeline, code and every result file.
+\end{itemize}
+
+Section~\ref{sec:related} reviews related work. Section~\ref{sec:data}
+describes the data and the injected attacks, and Section~\ref{sec:method} the
+models and experimental design. Section~\ref{sec:results} reports the results
+by sub-question, Section~\ref{sec:discussion} discusses them, and
+Sections~\ref{sec:limitations} and~\ref{sec:future} set out limitations and
+future work.
 
 %-------------------------------------------------------------- related work
 \section{Related Work}
@@ -518,7 +592,12 @@ generalisation.
 % and the appendix most likely to convince a careful reader of the rest.
 
 \section*{Acknowledgment}
-% Optional.
+% IEEE policy requires disclosing AI-generated content here, naming the system
+% and the sections it was used for. Check your school or competition rules too.
+% Edit this to describe what you actually used it for, e.g.:
+% "The author used Claude (Anthropic) to assist with software development, data
+% analysis and drafting parts of the text. The author reviewed, revised and
+% verified all content and takes full responsibility for it."
 
 % DRAFT ONLY: \nocite{*} lists every entry in refs.bib so the reference list
 % renders before the prose cites anything (an empty list is a LaTeX error).
