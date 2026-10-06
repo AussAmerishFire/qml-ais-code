@@ -72,7 +72,7 @@ With 571 training windows the Quantum Support Vector Machine scores 0.758 and
 beats all seven neural networks in the study, quantum and classical, which sit at
 0.54–0.68. It is the only quantum model that does not collapse when data is
 scarce. But it barely improves with more data (+0.005 from 571 to 1,429, against
-+0.203 for the pre-layer HQNN), and its cost grows with the square of the
++0.117 to +0.128 for the three variational networks), and its cost grows with the square of the
 training set, so it cannot reach the sizes where variational models finally win.
 
 The kernel trains a convex problem; the variational models run gradient descent

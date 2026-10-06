@@ -166,8 +166,8 @@ request Windows sleep prevention while they work.
   side always holding at least as many parameters.
 - A frozen-circuit control isolating what the trainable quantum gates contribute.
 - Paired Wilcoxon signed-rank tests at 10 seeds wherever a claim depends on one.
-- Determinism verified: two independent pipelines agreed to 0.00e+00 on 60
-  matched runs.
+- Determinism verified: 60 runs repeated through a second script reproduced the
+  originals exactly (worst difference 0.00e+00).
 - Corrections are recorded in place rather than quietly edited. Several claims in
   earlier drafts were wrong and are marked as corrected where they appeared,
   including one in the published summary page.

@@ -46,7 +46,8 @@ below.
   `docs/FINAL_REPORT.md` §2 and §8, `docs/RESULTS_SWEEP.md` §1, §2 and §4, and the
   published page.
 - **09**: The title said the variational quantum networks were the hungriest.
-  The unconstrained Multi-Layer Perceptron gains more (+0.241 vs +0.203).
+  The 71-parameter Multi-Layer Perceptron gains more: +0.169 against +0.122 on all
+  5 seeds (first measured as +0.241 against +0.203 on 3 seeds).
 - **14**: The title said the quantum kernel was beaten only by non-neural
   models. That holds at N = 571 only. At N = 1,429 neural networks overtake it:
   three on the first 3 seeds, two (the 71-parameter MLP and the re-uploading

@@ -330,7 +330,7 @@ Vessel overlap between every pair of splits: **0** (checked by the pipeline).
 | 42 property assertions (ranges, label consistency, no NaNs, split disjointness) | 42/42 pass | `scripts/07_validate_dataset.py` |
 | 22 features recomputed on a separate code path (different distance formula, explicit loops, bearing written out by hand) | 22/22 agree | `scripts/09_independent_check.py` |
 | 9 full pipeline rebuilds, each of three judgement thresholds at three values | under-way threshold (0.3/0.5/1.0 kn): immaterial, max ΔAUC 0.048. Window length (5/10/20): a real trade-off, max spread 0.078; short windows favour drift, long ones point events. Voyage split: **must be ≥ 1,800 s** (below it the gap attack collapses, spread 0.230); above it, insensitive (ΔAUC 0.004 from 1,800 to 3,600 s). Run on the original 7 features. | `scripts/08_sensitivity_sweep.py`, `docs/SENSITIVITY.md` |
-| Determinism: 60 runs repeated through two independent scripts | identical to 0.00e+00 | `docs/COMPLETE_RESULTS.md` §0 |
+| Determinism: 60 runs repeated through a second script (sharing the training code) | identical to 0.00e+00 | `docs/COMPLETE_RESULTS.md` §0 |
 
 ---
 
@@ -672,7 +672,7 @@ regression trained on 20 labelled anomalies (0.8349 vs 0.8348).
 | 1,429 | **0.763** | 0.740 | 0.803 | 0.855 |
 
 At 571 the kernel beats **all seven** neural networks. It barely improves with
-more data (+0.005), against +0.203 for the pre-layer circuit; by 1,429, two
+more data (+0.005), against +0.117 to +0.128 for the three quantum circuits; by 1,429, two
 classical networks (the 71-parameter MLP and the re-uploading twin) overtake it.
 
 **Interpretation.** The kernel solves a convex problem (an SVM); the circuits
@@ -777,8 +777,9 @@ study**, above gradient boosting's 0.994. But every model is near-perfect on tha
 attack, so the margin is small. On transponder switch-off, the tree models still
 lead at 0.961.
 
-**Gradual drift is unsolved by everyone**: 0.61–0.66 test AUC for every model,
-including a zero-parameter threshold rule, and it is 37.7% of test anomalies.
+**Gradual drift is unsolved by everyone**: 0.61–0.66 test AUC for every supervised
+model, 0.61 for a zero-parameter threshold rule and 0.58 for the label-free
+isolation forest. It is 37.7% of test anomalies.
 
 ---
 

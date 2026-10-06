@@ -192,8 +192,8 @@ the metric that matters at 3.5% imbalance. The largest single gain was on the
 `dark` attack, 0.79 → 0.96.
 
 Per-attack, at the 3.5% alert budget, the detector is strong on four of five
-attack types and **weak on drift** — 0.61–0.66 for every model including a
-zero-parameter threshold rule. Drift is 37.7% of test anomalies. Diagnosis is in
+attack types and **weak on drift** — 0.61–0.66 for every supervised model, 0.61 for a
+zero-parameter threshold rule and 0.58 for the label-free isolation forest. Drift is 37.7% of test anomalies. Diagnosis is in
 `scripts/PIPELINE.py`: `a_drift` slides position along a fixed bearing while leaving SOG,
 COG and Heading untouched, so it produces no spike for any max-based feature.
 `course_resid_mean` was added to target it and is the best single drift feature

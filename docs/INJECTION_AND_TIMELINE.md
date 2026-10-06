@@ -60,8 +60,9 @@ rather than a threshold, and it is where the quantum-vs-classical comparison
 will actually be decided.
 
 *Outcome:* it was not decided there. Drift is unsolved by every model in the
-study, quantum or classical, at 0.61–0.66 test AUC on full data — including a
-zero-parameter threshold rule. See `COMPLETE_RESULTS.md` §7.
+study, quantum or classical, at 0.61–0.66 test AUC on full data for every supervised
+model; a zero-parameter threshold rule reaches 0.61 and the label-free
+isolation forest 0.58. See `COMPLETE_RESULTS.md` §7.
 
 ## Attack allocation
 

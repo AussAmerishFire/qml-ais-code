@@ -168,33 +168,84 @@ future work.
 %-------------------------------------------------------------- related work
 \section{Related Work}
 \label{sec:related}
-% WRITE (~700 words). Each subsection ends with what it leaves open.
+% DRAFT -- rewrite in your own words before submission.
 
 \subsection{Maritime Anomaly Detection}
-% riveiro2018review, pallotta2013tread, millefiori2016ou, nguyen2021geotracknet,
-% nguyen2021traisformer, kroodsma2018fisheries, paolo2024satellite.
+Riveiro \textit{et al.}~\cite{riveiro2018review} review maritime anomaly
+detection and group existing methods into rule-based, statistical and
+learning-based approaches. Statistical approaches model normal traffic and flag
+departures from it: Pallotta \textit{et al.}~\cite{pallotta2013tread} extract
+route patterns from historical AIS data by clustering, and Millefiori
+\textit{et al.}~\cite{millefiori2016ou} model vessel motion as a mean-reverting
+stochastic process for long-term prediction. Learning-based approaches operate
+on raw trajectories. Kroodsma \textit{et al.}~\cite{kroodsma2018fisheries}
+applied convolutional neural networks to AIS tracks to map fishing activity
+worldwide; GeoTrackNet~\cite{nguyen2021geotracknet} detects anomalies with a
+probabilistic recurrent representation of AIS tracks and an \textit{a contrario}
+detector; and TrAISformer~\cite{nguyen2021traisformer} predicts trajectories
+with a transformer. Paolo \textit{et al.}~\cite{paolo2024satellite} matched
+satellite imagery against AIS and showed how much industrial activity escapes
+AIS altogether. These methods differ in how they model normal behavior, but none
+examines how detection degrades as labeled examples become scarce, which is the
+regime in which quantum models are expected to help.
 
 \subsection{Tree Ensembles as the Practical Baseline}
-% grinsztajn2022trees, shwartzziv2022tabular. This is why gradient boosting and
-% random forest are the comparison that matters in Section V-B.
+On tabular data, tree ensembles remain strong. Grinsztajn
+\textit{et al.}~\cite{grinsztajn2022trees} found that tree-based models still
+outperform deep learning on typical medium-sized tabular datasets, and
+Shwartz-Ziv and Armon~\cite{shwartzziv2022tabular} found that gradient-boosted
+trees generally outperformed recently proposed deep models for tabular data.
+Because our features are engineered and tabular, gradient boosting and random
+forest are the relevant comparison for any claim that a quantum model is useful
+in practice.
 
 \subsection{Quantum Machine Learning on Classical Data}
-% havlicek2019supervised, huang2021power, perezsalinas2020reuploading,
-% schuld2021encoding, biamonte2017qml, cerezo2021vqa.
+Two families of quantum models are commonly applied to classical
+data~\cite{biamonte2017qml}. Variational quantum circuits encode the input as
+gate parameters and train further gate angles by gradient
+descent~\cite{cerezo2021vqa}; hybrid quantum neural networks combine such
+circuits with classical layers. Quantum kernel methods instead use a fixed
+circuit as a feature map and train a classical support vector machine on the
+resulting kernel~\cite{havlicek2019supervised}. The way data are encoded
+matters: repeating the encoding between trainable layers, known as data
+re-uploading, makes even a single qubit a universal
+classifier~\cite{perezsalinas2020reuploading} and enlarges the set of functions
+a circuit can express~\cite{schuld2021encoding}. Huang
+\textit{et al.}~\cite{huang2021power} showed that whether any quantum kernel
+can outperform classical kernels on a given dataset can be bounded from the
+data themselves, through a quantity they call the geometric difference. We
+compute it in Section~\ref{sec:sq4}.
 
-\subsection{Generalisation Bounds and Benchmarking}
-% caro2022generalization, gilfuster2024rethinking, bowles2024benchmarking,
-% schuld2022advantage.
+\subsection{Generalization Bounds and Benchmarking}
+Caro \textit{et al.}~\cite{caro2022generalization} proved that the
+generalization error of a quantum model with $T$ trainable gates trained on $N$
+examples scales at worst as $\sqrt{T/N}$, improving to $\sqrt{K/N}$ when only
+$K \ll T$ gates change substantially during training. These are upper bounds on
+the gap between training and test performance; they do not guarantee that
+training succeeds. Gil-Fuster \textit{et al.}~\cite{gilfuster2024rethinking}
+showed that quantum models can fit randomly labeled data, so uniform bounds of
+this kind cannot by themselves explain when quantum models generalize. On the
+empirical side, Bowles \textit{et al.}~\cite{bowles2024benchmarking}
+benchmarked a range of popular quantum classifiers and found that standard
+classical models systematically outperformed them, and Schuld and
+Killoran~\cite{schuld2022advantage} argued that the field should study when and
+why quantum models behave differently rather than seek a blanket advantage.
 
 \subsection{Quantum Anomaly Detection}
-% corli2025anomaly, tscharke2025autoencoder, naaman2025adsb. None tests against
-% depth- and parameter-matched classical controls across training-set sizes --
-% that is the gap this paper fills.
+Corli \textit{et al.}~\cite{corli2025anomaly} review quantum machine-learning
+algorithms for anomaly detection. Applications include a quantum autoencoder
+for multivariate time series~\cite{tscharke2025autoencoder} and quantum-enhanced
+anomaly detection on ADS-B data~\cite{naaman2025adsb}, the aviation counterpart
+of AIS. To our knowledge, none of this work compares quantum models with
+classical controls matched in depth and parameter count across a range of
+training-set sizes, which is the comparison needed to test the scarce-data
+argument directly.
 
 %------------------------------------------------------------------ the data
 \section{Data and Problem Setup}
 \label{sec:data}
-% WRITE (~800 words). Figure ~\ref{fig:overview} shows the whole study at once.
+% DRAFT -- rewrite in your own words before submission.
+Fig.~\ref{fig:overview} summarizes the data pipeline and the experiment.
 
 \begin{figure*}[t]
   \centering
@@ -205,31 +256,92 @@ future work.
 \end{figure*}
 
 \subsection{Source Data and Windowing}
-% MarineCadastre 2023-01-01, 8,156,509 reports, one day of US coastal AIS
-% (marinecadastre). Filters, then windows of 10 consecutive reports per vessel.
-% Figure ~\ref{fig:pipeline}, Table ~\ref{tab:dataset}.
+We obtained every AIS position report broadcast off the coast of the United
+States on 1 January 2023 from MarineCadastre~\cite{marinecadastre}: 8,156,509
+reports from 15,932 vessels. We retained reports from Class A transceivers, the
+system mandatory for large commercial vessels; excluded speeds of 40~kn or more,
+which removes the value 102.3 that AIS uses to encode an unavailable speed; and
+excluded speeds below 0.5~kn, which removes moored vessels and accounts for 76\%
+of the remaining reports. We then kept vessels with at least 200 reports,
+leaving 1,256,434 reports from 2,441 vessels (Fig.~\ref{fig:pipeline}).
+
+Each vessel's reports were sorted in time and segmented into voyages wherever
+consecutive reports were more than 1,800~s apart, an interval that no normal
+Class~A reporting interval in the data reaches. This produced 7,935 voyages.
+Segmentation preceded every calculation between consecutive reports, so that no
+quantity was computed across two voyages. Each voyage was then partitioned into
+non-overlapping windows of ten consecutive reports, which span about
+12~minutes at the median reporting interval of 70~s. The windows do not overlap
+so that no two windows share a report.
 
 \subsection{Features}
-% 12 features: 7 original, 4 trend/direction features added after a probe showed
-% a max cannot see a gradual trend, 1 missingness flag. Full definitions in
-% Appendix A (from docs/METHODS.md Part 6). Figure ~\ref{fig:features}: what
-% each feature achieves alone.
+For each pair of consecutive reports we computed the elapsed time, the
+great-circle distance between the two positions, the speed implied by that
+distance, the absolute difference between implied and reported speed (the
+\emph{speed mismatch}), and the bearing actually travelled. From these we
+derived twelve features per window, defined in Appendix~\ref{app:features}.
+Most target internal contradictions rather than departures from typical
+behavior: a vessel reports both its position and its speed, and the two must
+agree. In unmodified data the median speed mismatch is 0.11~kn and its
+99th percentile 3.20~kn.
 
-\subsection{Vessel-Disjoint Splitting}
-% State the zero-overlap check explicitly. This is the most important
-% methodological detail in the paper: without it the same vessel appears in
-% train and test and every number is inflated.
+Seven features summarize each window by a mean or a maximum. Because a maximum
+cannot capture a gradual trend, we added four trend and direction features (the
+angle between reported course and the bearing travelled, the slope of the speed
+mismatch across the window, the straightness of the path, and the mean speed
+mismatch) together with a flag for missing heading. On a held-out
+vessel-disjoint split, adding the four features raised random-forest AUC from
+0.790 to 0.833. Seven heavy-tailed features were log-transformed, the mismatch
+slope was given a signed logarithm, and every feature was min--max scaled to
+$[0,\pi]$ using training-split statistics only, because each value is later
+encoded as a qubit rotation angle. Fig.~\ref{fig:features} shows how well each
+feature separates each attack on its own.
 
 \subsection{Injected Attacks}
-% Five attacks with severities derived from measured properties of clean data.
-% Figure ~\ref{fig:attackex} shows each one on a real track; Figure
-% ~\ref{fig:attacks} the mix per split. Gradual drift is 37.7% of test anomalies
-% and the hardest to detect. Say why injected rather than observed (repeat in
-% Limitations).
+No public dataset labels AIS manipulation at this scale, so we injected five
+attack types with known labels (Fig.~\ref{fig:attackex}). \emph{Speed
+falsification} multiplies or divides the reported speed from a random point
+onward by a factor of 1.8--5.0, limited so that the reported speed stays between
+0.5 and 39~kn. A \emph{position jump} displaces every later position by
+500--20,000~m on a random bearing. A \emph{reporting gap} deletes consecutive
+reports until 500--1,700~s of silence accumulate; the lower bound exceeds the
+99th percentile of natural gaps (491~s), and the upper bound stays below the
+1,800~s voyage threshold so that the gap does not split the voyage.
+\emph{Transponder switch-off} deletes 3,600--21,600~s of reports, splitting the
+voyage so that its second part begins after a long silence. \emph{Gradual drift}
+displaces positions along a random bearing by up to 100--3,000~m, growing as
+$(i/n)^{1.5}$ along the track, while leaving speed, course and heading
+unchanged. Severities were drawn uniformly from these ranges
+(Appendix~\ref{app:attacks}).
+
+Of 5,900 eligible voyages, 2,653 (45\%) were attacked. Because attacks corrupt
+very different numbers of reports (speed falsification affects hundreds; a
+position jump, three), voyages were allocated to attacks in inverse proportion
+to the windows each produces, which reduced the imbalance between attack types
+from 128:1 to 2.3:1. A window was labeled anomalous only if it contained at least
+one modified report. Finally, 77 normal windows whose speed mismatch exceeded
+60~kn were removed as corrupted position data. The resulting dataset contains
+114,969 windows, of which 3,992 (3.47\%) are anomalous. Gradual drift is the
+largest class, at 37.7\% of test anomalies (Fig.~\ref{fig:attacks}).
+
+\subsection{Vessel-Disjoint Splitting}
+Windows were partitioned by vessel into training (60\%), validation (15\%) and
+test (25\%) sets, so that every window from a given vessel falls in one split
+and every model is evaluated on vessels it has never seen. Before assignment,
+vessels were stratified by their dominant attack type and number of anomalous
+windows, which keeps the attack mix comparable across splits.
+Table~\ref{tab:dataset} gives the resulting splits; no vessel appears in more
+than one. Splitting by window instead would place windows from the same voyage
+on both sides of the split and inflate every score.
 
 \subsection{Class Imbalance and the Alert Budget}
-% 3.47% anomalous: why PR-AUC and a 3.5% alert budget are reported alongside
-% AUC.
+With 3.47\% of windows anomalous, a detector that flags nothing achieves 96.5\%
+accuracy, so we do not report accuracy. We report the area under the receiver
+operating characteristic curve (AUC), which measures how reliably anomalous
+windows are ranked above normal ones; the area under the precision--recall
+curve (PR-AUC), which emphasizes the top of the ranking that an analyst would
+review; and precision and recall when the highest-scoring 3.5\% of test windows
+are flagged, a budget matching the anomaly rate.
 
 \input{tables/tab_dataset}
 
@@ -245,9 +357,9 @@ future work.
   \centering
   \includegraphics[width=\textwidth]{17_attack_examples.png}
   \caption{Each attack injected into the same real vessel track by the study's
-  own injection code. Shading marks the reports labelled anomalous. Panel titles
-  give the severity actually applied, which can fall below the requested value
-  where a physical cap binds (reported speed is capped at 39~kn).}
+  injection code. Shading marks the reports labeled anomalous. Panel titles give
+  the severity actually applied, which can fall below the requested value where
+  a physical limit binds (reported speed is capped at 39~kn).}
   \label{fig:attackex}
 \end{figure*}
 
@@ -271,14 +383,27 @@ future work.
 %----------------------------------------------------------------- the models
 \section{Models and Experimental Design}
 \label{sec:method}
-% WRITE (~1200 words). This section decides whether a reviewer believes the rest.
+% DRAFT -- rewrite in your own words before submission.
+We compare thirteen models, listed with their parameter counts in
+Table~\ref{tab:models}.
 
-\subsection{Hybrid quantum neural networks}
-% Three 8-qubit architectures (Figure ~\ref{fig:circuits}): classical pre-layer
-% (T=154), data re-uploading (T=161, perezsalinas2020reuploading), frozen
-% circuit (T=106, control). State the forced Dense(12->8) pre-layer and that it
-% is a handicap in the conservative direction: quantum sees 8 compressed
-% features, the twin sees 12.
+\subsection{Hybrid Quantum Neural Networks}
+All three hybrid quantum neural networks (HQNNs) use eight qubits and share the
+structure shown in Fig.~\ref{fig:circuits}. A trainable classical layer maps
+the twelve features to eight rotation angles, $\boldsymbol{\theta} = \pi\,
+\sigma(W\mathbf{x} + \mathbf{b})$, with $12\times 8$ weights and 8 biases
+(104 parameters). This compression is forced by the qubit budget: angle
+encoding places one feature on one qubit, and simulating twelve qubits costs
+about sixteen times more per circuit evaluation than eight. It handicaps the
+quantum models, whose classical twins read all twelve features directly. Each
+angle is encoded as an $R_X$ rotation on its own qubit. Strongly entangling
+layers then apply a general single-qubit rotation with three trainable angles
+to every qubit, followed by a ring of CNOT gates; two layers contribute
+$2\times 8\times 3 = 48$ trainable angles. The expectation value
+$\langle Z_i\rangle$ is measured on each qubit, and a readout maps the eight
+values to a single score, which a sigmoid converts to a probability. Circuits
+were simulated exactly, without noise, using
+PennyLane~\cite{bergholm2018pennylane}.
 
 \begin{figure*}[t]
   \centering
@@ -287,88 +412,181 @@ future work.
   features to 8 with a trainable classical layer, encodes them as qubit
   rotations, applies strongly entangling layers, and reads out Pauli-$Z$
   expectations. The frozen circuit is identical to the classical pre-layer
-  model except that its 48 rotation angles are fixed at initialisation.}
+  model except that its 48 rotation angles are fixed at initialization.}
   \label{fig:circuits}
 \end{figure*}
 
 \subsubsection{Classical pre-layer}
-% Dense(12->8), angle embedding, two strongly entangling layers (48 angles),
-% sum of <Z>. T = 154.
+The input is encoded once, followed by both entangling layers, with readout
+$a\sum_i \langle Z_i\rangle + b$. The model has $T = 104 + 48 + 2 = 154$
+trainable parameters.
 
 \subsubsection{Data re-uploading}
-% The input is re-encoded before each entangling layer (perezsalinas2020reuploading,
-% schuld2021encoding), linear readout. T = 161.
+The input is re-encoded before each entangling
+layer~\cite{perezsalinas2020reuploading}, which enlarges the set of functions
+the circuit can express~\cite{schuld2021encoding}, and the readout is a linear
+combination of the eight expectation values (9 parameters), giving $T = 161$.
 
 \subsubsection{Frozen-circuit control}
-% Identical to the pre-layer model with the 48 rotation angles held at their
-% random initialisation. T = 106. Isolates what training the quantum gates adds.
+This model is identical to the pre-layer model, except that its 48 rotation
+angles are fixed at their random initial values and never trained, giving
+$T = 106$. Comparing it with the pre-layer model isolates what training the
+quantum gates contributes.
 
-\subsection{Depth- and parameter-matched classical twins}
-% Matched on depth AND parameter count, classical side never lower (Table I).
-% This is what makes Section V-A a controlled comparison rather than a demo.
+\subsection{Depth- and Parameter-Matched Classical Twins}
+Each HQNN is paired with a classical multilayer perceptron (MLP) of equal depth
+and at least as many parameters. Because each HQNN has two trainable stages, its
+twin has two hidden layers: 8 and 5 units for the pre-layer model
+(155 parameters), 8 and 6 for the re-uploading model (165), and 6 and 4 for the
+frozen circuit (111). Matching depth as well as parameter count matters: in a
+preliminary two-seed screen, matching parameters alone produced an apparent
+quantum advantage that disappeared once depth was also matched. The twins
+receive all twelve features, the same training windows, and the same number of
+optimization steps as their quantum counterparts.
 
-\subsection{The quantum kernel}
-% IQP fidelity kernel (havlicek2019supervised), PCA 12->8, SVM on a precomputed
-% kernel. O(N^2) cost is why it stops at 1,429 windows -- itself a finding.
+\subsection{The Quantum Kernel}
+The quantum support vector machine (QSVM) has no trainable circuit parameters.
+The twelve features are reduced to eight by principal component analysis fitted
+on the training subsample, rescaled to $[0,\pi]$, and mapped to quantum states
+with an IQP embedding~\cite{havlicek2019supervised}. The kernel between two
+windows is the fidelity $|\langle\phi(\mathbf{x})|\phi(\mathbf{x}')\rangle|^2$,
+obtained by applying the embedding of $\mathbf{x}$ followed by the inverse
+embedding of $\mathbf{x}'$ and reading the probability of the all-zero state. A
+classical support vector machine is trained on the precomputed kernel, with its
+regularization constant $C\in\{1, 10\}$ selected on a 20\% holdout drawn from
+the training subsample. The kernel requires one circuit evaluation per pair of
+windows, so its cost grows as $N^2$: about one hour per seed at 571 windows and
+2.8~h at 1,429 on our hardware. At 68,296 windows the kernel matrix alone would
+occupy 37~GB. We therefore evaluated the QSVM at the two smallest training-set
+sizes, on the validation set.
 
-\subsection{Classical baselines}
-% Gradient boosting, random forest, logistic regression, a 12-5-1 MLP (71
-% parameters), isolation forest (no labels), single-threshold rule (0
-% parameters). The last two show what is achievable with no learning at all.
+\subsection{Classical Baselines}
+We include six classical baselines (Table~\ref{tab:models}): gradient boosting,
+random forest, logistic regression, an MLP with one hidden layer of five units
+(71 parameters), an isolation forest trained without labels, and a
+single-threshold rule that scores each window by its maximum speed mismatch and
+is not trained at all. The last two show what can be achieved without labels.
+Each baseline was tuned over 9--12 configurations by validation AUC on the full
+training set (Appendix~\ref{app:repro}), and the selected configuration was used
+at every training-set size. The quantum models and their twins were tuned over
+two configurations each (Section~\ref{sec:training}). This asymmetry favors the
+classical baselines.
 
-\subsection{Training protocol}
-% FIXED GRADIENT-STEP BUDGET (640 steps), not fixed epochs. Explain why: at a
-% fixed epoch count a model trained on 571 windows receives 120x fewer updates
-% than one trained on 68,296, which would confound the entire scarce-data
-% comparison. Identical subsamples across models at each seed. Two
-% hyperparameter configurations per model, equal on both sides.
+\subsection{Training Protocol}
+\label{sec:training}
+\textit{Training-set sizes.} We trained on $N$ = 571, 1,429, 2,857, 14,286 and
+68,296 windows. The first four correspond to 20, 50, 100 and 500 labeled
+anomalies at a 3.5\% anomaly rate ($N$ = anomalies$/0.035$); the last is the
+full training split, with 2,420 anomalies. The sizes span a 120-fold range. For
+each seed $s$, a subsample of size $N$ was drawn at a fixed anomaly rate with a
+random generator seeded by $1000+s$, so that every model trained on identical
+windows at a given size and seed.
 
-\subsection{Evaluation and statistics}
-% ROC-AUC, PR-AUC, precision and recall at a 3.5% alert budget, per-attack AUC.
-% Paired Wilcoxon signed-rank over 10 seeds; note that 5 paired seeds cannot
-% reach p < 0.05 (floor 0.0625), which is why headline comparisons use 10.
+\textit{Hyperparameters.} Each neural model was tuned on one 14,286-window
+subsample over two learning rates and three seeds: Adam learning rates of 0.02
+and 0.05 for the HQNNs, and 0.003 and 0.01 for the twins, each with weight
+decay $10^{-4}$. The setting with the higher mean validation AUC was kept. The
+frozen circuit inherited the setting chosen for the pre-layer model.
 
-\subsection{Reproducibility}
-% 8-qubit noiseless simulation, PennyLane (bergholm2018pennylane) with JAX,
-% pinned versions; determinism verified at 0.00e+00 across 60 matched runs;
-% code and every result CSV public.
+\textit{Fixed step budget.} Every neural model, quantum or classical, was
+trained for exactly 640 gradient steps at every training-set size, with batch
+size $\min(4096, N)$, binary cross-entropy loss, L2 weight decay of $10^{-4}$
+and the Adam optimizer. Training for a fixed number of epochs instead would give
+a model trained on 571 windows about 120 times fewer parameter updates than one
+trained on 68,296, so that scarce data would be confounded with
+under-training. The budget equals 40 epochs at full data (16 batches per epoch).
+The model after the final step was evaluated, without early stopping.
+
+\subsection{Evaluation and Statistics}
+Hyperparameters were selected on the validation set; the test set
+(29,292 windows from 609 vessels) was used only to report results. We report
+AUC, PR-AUC, precision and recall at the 3.5\% alert budget (the 1,025
+highest-scoring test windows), and per-attack AUC, computed on the normal
+windows together with the windows of a single attack type.
+
+Each model was trained with five seeds at every size, and with ten seeds at the
+smallest and largest sizes, which we call the endpoints. A quantum model and its
+twin train on identical windows, so their comparison is paired by seed, and we
+test it with a two-sided Wilcoxon signed-rank test. With $n$ pairs, the
+smallest attainable $p$-value is $2/2^n$: 0.0625 for five seeds, so significance
+at $p<0.05$ is impossible, and 0.002 for ten. We therefore test significance at
+the endpoints with ten seeds and report effect sizes across all five sizes.
+Where the quantum--twin difference $\Delta$ changes sign between adjacent sizes
+$N_i$ and $N_{i+1}$, we locate the crossover by linear interpolation in
+$\log N$:
+\begin{equation}
+N^{*} = \exp\!\left[\ln N_i + t\,(\ln N_{i+1}-\ln N_i)\right],\quad
+t = \frac{-\Delta_i}{\Delta_{i+1}-\Delta_i}.
+\label{eq:crossover}
+\end{equation}
+
+\subsection{Validation and Reproducibility}
+The dataset passed 42 automated property checks and a recomputation of its
+features through an independent implementation (22 checks). Nine complete
+rebuilds of the pipeline tested three preprocessing thresholds
+(Appendix~\ref{app:repro}). Sixty runs repeated through a second script
+reproduced the original results exactly. All experiments ran on a single
+laptop with 22 CPU threads and 17~GB of memory, in about 66~h of computation.
+The code, data pipeline and every result file are publicly available.
 
 \input{tables/tab_models}
 
 %---------------------------------------------------------------- the results
 \section{Results}
 \label{sec:results}
+% DRAFT -- rewrite in your own words before submission.
+Table~\ref{tab:testauc} reports test AUC for every model at every training-set
+size. We present the results by sub-question.
 
-\subsection{The gap inverts with training-set size}
+\subsection{The Gap Inverts With Training-Set Size}
 \label{sec:sq1}
-% WRITE: lead with the answer in one sentence, then the evidence.
-%  - Table ~\ref{tab:endpoints}: Delta and p for all three pairs at both ends.
-%  - 19 significant wins / 0 losses at full data; 0 / 6 when scarce
-%    (Figure ~\ref{fig:significance}).
-%  - Measured crossover: 2,443 / 7,229 / 9,432 windows.
-%  - Frozen-circuit control: freezing the 48 quantum angles changes nothing
-%    significantly at any size, so the win is not coming from the trainable
-%    quantum parameters.
-%  - The re-uploading exception: significant at neither end; connect to
-%    schuld2021encoding on encoding repetition.
-% TRAP: Caro's bound is an UPPER bound. Nothing here contradicts the theorem;
-% what fails is the inference drawn from it. Say so explicitly.
+Against their matched twins, the hybrid quantum networks are significantly
+worse when training data are scarce and significantly better when they are
+plentiful.
 
 \subsubsection{Quantum against matched twins}
-% Table ~\ref{tab:endpoints}, Figures ~\ref{fig:inversion}, ~\ref{fig:seeds}.
+Table~\ref{tab:endpoints} gives the paired differences at the endpoints. With
+571 training windows, the pre-layer and frozen-circuit networks trail their
+twins by 0.058 ($p=0.027$) and 0.081 ($p=0.020$). With 68,296 windows, both
+lead, by 0.020 ($p=0.010$) and 0.040 ($p=0.002$). Fig.~\ref{fig:seeds} shows
+every seed: at full data the frozen circuit outperforms its twin on all ten
+seeds, and the pre-layer network on nine. Across all 54 paired comparisons
+(three pairs, two sizes and nine metrics), all 19 significant quantum wins occur
+at full data and all 6 significant losses at 571 windows
+(Fig.~\ref{fig:significance}).
 
 \subsubsection{The crossover point}
-% 2,443 (frozen), 7,229 (pre-layer), 9,432 (re-uploading) windows; roughly 87,
-% 256 and 334 labelled anomalies. Interpolated between measured sizes, never
-% extrapolated beyond them.
+Fig.~\ref{fig:inversion} traces the difference across all five sizes on the
+test set. By (\ref{eq:crossover}), the frozen circuit overtakes its twin at
+about 2,443 windows, or 87 labeled anomalies, and the pre-layer network at about
+7,229 windows, or 256 labeled anomalies. These values are interpolated between
+measured sizes, not extrapolated beyond them.
 
 \subsubsection{Frozen-circuit ablation}
-% No significant difference at any size (every p >= 0.62 at 5 seeds; +0.004,
-% p = 1.000 at 10 seeds on test). Training the quantum angles adds nothing
-% measurable.
+Freezing the 48 quantum angles made no measurable difference at any size. The
+validation difference between the frozen and trained pre-layer networks ranged
+from $-0.019$ to $+0.004$ across the five sizes, with no value significant
+($p\ge 0.625$); on the test set with ten seeds it was $+0.004$ at 571 windows
+($p=1.000$) and $-0.001$ at 68,296 ($p=0.922$). The model with fewer trainable
+gates therefore showed none of the small-data benefit that the $\sqrt{T/N}$
+reading predicts, and the full-data advantage over the twins does not depend on
+training the quantum gates.
 
 \subsubsection{The data re-uploading exception}
-% Significant at neither endpoint. Connect to schuld2021encoding.
+The re-uploading network differs significantly from its twin at neither
+endpoint ($+0.016$, $p=0.557$ at 571 windows; $+0.009$, $p=0.160$ at 68,296)
+and stays within 0.035 of it at every size. It was also the strongest quantum
+network at 571 windows (test AUC 0.653). Re-encoding the input enlarges the set
+of functions a circuit can express~\cite{schuld2021encoding}; our data suggest
+it may also make training from few examples easier, but this experiment does not
+establish why.
+
+These results do not contradict the bound of Caro
+\textit{et al.}~\cite{caro2022generalization}, which limits the gap between
+training and test error and says nothing about how well a model can be trained
+from $N$ examples. They contradict the inference drawn from it: that a quantum
+model with fewer trainable gates should outperform a classical model of the same
+size when data are scarce.
 
 \input{tables/tab_endpoints}
 
@@ -394,18 +612,31 @@ future work.
   \centering
   \includegraphics[width=\columnwidth]{12_significance_map.png}
   \caption{All 54 paired comparisons. Every significant quantum win occurs at
-  full training data; every significant loss occurs when data is scarce.}
+  full training data; every significant loss occurs when data are scarce.}
   \label{fig:significance}
 \end{figure}
 
-\subsection{Quantum against the best classical models}
+\subsection{Quantum Against the Best Classical Models}
 \label{sec:sq2}
-% WRITE: no quantum model beats gradient boosting (0.8316) or random forest
-% (0.8225) at any size; best quantum 0.8074. Gap narrows from -0.119 at 571 to
-% -0.020 at 14,286, then stalls. Against logistic regression and the
-% 71-parameter MLP the quantum models are LEVEL, not ahead: the margins are
-% smaller than their own seed-to-seed spread. Table ~\ref{tab:testauc},
-% Figure ~\ref{fig:ranking}.
+No quantum model outperforms the strongest classical models at any training-set
+size (Table~\ref{tab:testauc}, Fig.~\ref{fig:ranking}). The gap between the best
+quantum and the best classical model narrows from 0.119 at 571 windows (the
+re-uploading network at 0.653 against random forest at 0.772) to 0.020 at
+14,286 windows, then stops narrowing (0.026 at 68,296). At full data, gradient
+boosting reaches 0.832 and random forest 0.823, against 0.807 for each of the
+three quantum networks (ten seeds); on PR-AUC the gap is wider, 0.431--0.434
+against 0.374--0.384. The quantum networks are level with logistic regression
+(0.802) and the 71-parameter MLP (0.804): their margins over these models,
+0.003--0.006, are smaller than their own seed-to-seed standard deviations,
+0.010--0.014. Because that MLP has fewer parameters than any quantum network,
+the results support no claim of parameter efficiency.
+
+With little data, non-neural models outperform every neural network, quantum or
+classical. At 571 windows the best non-neural model (isolation forest,
+validation AUC 0.835) leads the best neural model (the frozen-circuit twin,
+0.681) by 0.154, and the shortfall is shared by quantum and classical networks
+alike. The isolation forest, which uses no labels, matches logistic regression
+trained on 20 labeled anomalies (0.8349 against 0.8348).
 
 \begin{figure}[t]
   \centering
@@ -415,20 +646,31 @@ future work.
   \label{fig:ranking}
 \end{figure}
 
-\subsection{Quantum kernels against variational circuits}
+\subsection{Quantum Kernels Against Variational Circuits}
 \label{sec:sq3}
-% WRITE: at 571 windows the quantum kernel scores 0.758 and beats all seven
-% neural networks, quantum and classical (0.54-0.68); it then barely improves
-% (+0.005 to 1,429 against +0.203 for the pre-layer HQNN). The kernel solves a
-% convex problem; the variational models do not. THE MECHANISTIC CLAIM: the
-% scarce-data deficit belongs to variational optimisation, not to quantum
-% feature maps. Figures ~\ref{fig:kernel} and ~\ref{fig:curves}.
+The quantum kernel behaves differently from the variational circuits
+(Fig.~\ref{fig:kernel}). At 571 windows it reaches a validation AUC of
+$0.758\pm0.028$ and outperforms all seven neural networks, quantum and
+classical, which range from 0.539 to 0.681; the best variational quantum network
+reaches 0.624. It then barely improves: by $+0.005$ from 571 to 1,429 windows,
+against $+0.117$ to $+0.128$ for the three variational quantum networks. By
+1,429 windows two classical networks overtake it (the 71-parameter MLP at 0.803
+and the re-uploading twin at 0.783), and the best non-neural classical models
+exceed it at both sizes (0.835 and 0.855). Fig.~\ref{fig:curves} shows the full
+learning curves on the test set.
+
+The kernel model solves a convex problem: the circuit is fixed and the support
+vector machine has a unique optimum. The variational networks are trained by
+gradient descent over a non-convex landscape. That the kernel holds up with
+scarce data while every variational quantum network collapses indicates that
+the quantum models' scarce-data deficit lies in training variational circuits,
+not in quantum feature maps as such.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{14_quantum_kernel.png}
   \caption{The quantum kernel against every other model at the two smallest
-  training-set sizes.}
+  training-set sizes (validation AUC, five seeds).}
   \label{fig:kernel}
 \end{figure}
 
@@ -438,34 +680,60 @@ future work.
   \caption{Learning curves on the held-out test set (29,292 windows from 609
   vessels never seen in training), with the anomaly rate held at 3.5\%. Bands
   are one standard error over five seeds. The quantum kernel is omitted because
-  it was scored on validation only; its results are in Figure~\ref{fig:kernel}.}
+  it was scored on validation only; its results are in Fig.~\ref{fig:kernel}.}
   \label{fig:curves}
 \end{figure*}
 
-\subsection{A measured ceiling, and quantum features in tree models}
+\subsection{A Measured Ceiling, and Quantum Features in Tree Models}
 \label{sec:sq4}
-% WRITE: geometric difference (huang2021power) is 2.9 of a possible 23.9 at
-% 571 windows and 3.8 of 37.8 at 1,429 -- about a tenth of the maximum, and
-% shrinking as a share. A classical kernel learns anything the quantum kernel
-% can at no more than g^2 times the complexity. On the real labels at 571 the
-% quantum kernel is simpler on 5 of 5 seeds; that edge is gone by 1,429.
-% Quantum features added to random forest and gradient boosting make both
-% WORSE, and are never better than the best classical control (they beat the
-% random-Fourier control once: gradient boosting at N=571, p=0.037).
-% REPORT THE VALIDATION/TEST REVERSAL: on validation the quantum features beat
-% every control for random forest at large N; on test the same comparison
-% reversed. It is a methodological contribution, not an embarrassment.
-% Tables ~\ref{tab:geometric} and ~\ref{tab:qfeatures}.
 
 \subsubsection{Geometric difference}
-% Figure ~\ref{fig:geometric}, Table ~\ref{tab:geometric}.
+Following Huang \textit{et al.}~\cite{huang2021power}, we computed the geometric
+difference $g$ between the QSVM's quantum kernel and eight classical kernels
+(Gaussian kernels at seven bandwidths spanning a 1,000-fold range, and a linear
+kernel) on the same subsamples and inputs, counting only classical kernels able
+to fit the training data. The value of $g$ lies between 1 and $\sqrt{N}$, and a
+classical kernel can learn any function the quantum kernel can with at most
+$g^2$ times its model complexity. The median $g$ over five seeds is 2.9 at 571
+windows and 3.8 at 1,429, against maxima of 23.9 and 37.8
+(Table~\ref{tab:geometric}, Fig.~\ref{fig:geometric}): about 12\% and 10\% of
+the largest possible separation. The room for a quantum-kernel advantage on
+these data is therefore small, and it shrinks relative to its maximum as the
+data grow.
+
+On the actual labels, the quantum kernel is the simpler description at
+571 windows: with ridge parameter 0.01, its model complexity is lower than that
+of every fitting classical kernel on five of five seeds. The advantage does not
+persist. At 1,429 windows, with ridge parameter 0.001, where classical kernels
+fit on every seed, the quantum kernel is the more complex description on five of
+five seeds.
 
 \subsubsection{Quantum features in tree ensembles}
-% Figure ~\ref{fig:qfeatures} (left, centre), Table ~\ref{tab:qfeatures}.
+We also tested whether features computed by a quantum circuit improve the tree
+ensembles used in practice. The single-qubit expectation values $\langle
+X_i\rangle$, $\langle Y_i\rangle$ and $\langle Z_i\rangle$ of the QSVM's
+IQP-embedded state gave 16 non-constant features; every $\langle Z_i\rangle$
+vanishes for a single IQP repetition. Random forest and gradient boosting, with
+their tuned settings, were trained on the twelve original features alone, with
+the 16 quantum features added, and with three classical controls computed from
+the same eight inputs: 16 random Fourier features, 16 random $\tanh$ features,
+and the eight inputs themselves. Five sizes, ten seeds, five input sets and two
+models gave 500 fits (Fig.~\ref{fig:qfeatures}, Table~\ref{tab:qfeatures}).
+
+Quantum features lowered test AUC in all ten model-and-size combinations, and
+significantly for random forest at every size ($-0.010$ to $-0.024$,
+$p\le 0.004$). They were never better than the best classical control,
+outperforming random Fourier features once (gradient boosting at 571 windows,
+$p=0.037$).
 
 \subsubsection{The validation/test reversal}
-% Figure ~\ref{fig:qfeatures} (right). Had only validation been examined, this
-% would have been reported as a quantum advantage.
+On the validation set, random forest with quantum features outperformed both the
+plain model and every classical control at the two largest sizes ($+0.006$ to
+$+0.010$, $p\le 0.049$). On the test set the same comparison reversed: at 68,296
+windows the quantum features lowered AUC by 0.010 ($p=0.002$). The two sets
+contain different vessels, and an effect that changes sign between them is not
+a property of the model. Had only the validation set been examined, this result
+would have been reported as a quantum advantage.
 
 \begin{figure*}[t]
   \centering
@@ -482,29 +750,42 @@ future work.
   \includegraphics[width=\textwidth]{21_quantum_features.png}
   \caption{Quantum features added to random forest and gradient boosting,
   against three classical controls computed from the same eight inputs (left,
-  centre). Right: for random forest the quantum features appear to help on
-  validation at large training sizes but hurt on the held-out test set at every
-  size.}
+  center). Right: for random forest the quantum features appear to help on
+  validation at large training sizes but lower AUC on the held-out test set at
+  every size.}
   \label{fig:qfeatures}
 \end{figure*}
 
 \input{tables/tab_geometric}
 \input{tables/tab_qfeatures}
 
-\subsection{Detection by attack type}
+\subsection{Detection by Attack Type}
 \label{sec:attacks}
-% WRITE: transponder switch-off +0.073 over the matched twin (p = 0.002) -- the
-% attack most associated with sanctions evasion and illegal fishing. Speed
-% falsification 0.998, the highest single score in the study. Gradual drift
-% unsolved: 0.61-0.66 for every model including a zero-parameter rule.
-% Table ~\ref{tab:attacks}, Figure ~\ref{fig:perattack}.
+Fig.~\ref{fig:perattack} breaks test AUC down by attack type at full data, with
+ten paired seeds; Table~\ref{tab:attacks} gives five-seed values for every
+model. The quantum networks' largest advantage over their twins is on
+transponder switch-off: $+0.073$ for the pre-layer network (0.819 against 0.746,
+$p=0.002$) and for the frozen circuit (0.814 against 0.741, $p=0.010$), and
+$+0.044$ for the re-uploading network ($p=0.004$). This is the attack most
+closely associated with concealed fishing activity~\cite{welch2022unseen}; the
+tree ensembles nonetheless remain far ahead on it, at 0.961. On speed
+falsification, the re-uploading network reaches 0.998, the highest score of any
+model on any attack, against 0.994 for gradient boosting, although every model
+is close to the ceiling there. All three quantum networks also significantly
+outperform their twins on reporting gaps ($+0.014$ to $+0.024$).
+
+Gradual drift, 37.7\% of test anomalies, remains unsolved. Every supervised
+model scores between 0.61 and 0.66 on it, the threshold rule 0.61, and the
+isolation forest 0.58. Because drift leaves speed, course and heading unchanged
+and accumulates slowly, it produces no abrupt change for maximum-based features
+to detect.
 
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{11_attack_detection.png}
-  \caption{Detection by attack type at full training data. Filled markers are
-  the hybrid quantum networks, open markers their matched twins; dotted lines
-  are gradient boosting and random forest.}
+  \caption{Detection by attack type at full training data, ten paired seeds.
+  Filled markers are the hybrid quantum networks and open markers their matched
+  twins; dotted lines are gradient boosting and random forest.}
   \label{fig:perattack}
 \end{figure*}
 
@@ -514,96 +795,270 @@ future work.
 %------------------------------------------------------------------ discussion
 \section{Discussion}
 \label{sec:discussion}
-% WRITE (~900 words)
+% DRAFT -- rewrite in your own words before submission.
 
-\subsection{Optimisation, Not Generalisation}
-% The kernel does not collapse, the variational models do. gilfuster2024rethinking
-% on why uniform bounds do not tell the whole story. Barren plateaus as related
-% context (larocca2025barren) -- but do not claim to have measured one.
+\subsection{Optimization, Not Generalization}
+The central result runs opposite to the common reading of the generalization
+bound, but it does not contradict the bound. Caro
+\textit{et al.}~\cite{caro2022generalization} bound the gap between training and
+test error; a model that cannot fit its training data has a small gap and still
+performs poorly. Three observations point to optimization as the binding
+constraint at small $N$. First, the quantum kernel, which involves no circuit
+training, does not collapse. Second, freezing the 48 quantum angles changes
+nothing measurable, so the trainable quantum gates are the source of neither the
+small-data deficit nor the full-data advantage. Third, the classical twins,
+trained with the same step budget, also degrade with scarce data, but less than
+the pre-layer and frozen-circuit networks. This is consistent with Gil-Fuster
+\textit{et al.}~\cite{gilfuster2024rethinking}, who show that uniform
+generalization bounds cannot by themselves explain how quantum models behave,
+and with the known difficulty of training variational
+circuits~\cite{cerezo2021vqa,larocca2025barren}. We did not measure gradient
+variance, so we cannot attribute the deficit to barren plateaus specifically.
+
+Because the frozen circuit matches the trained one, the full-data advantage over
+the twins appears to come from combining a trained classical layer with a fixed
+quantum feature map, which then functions much like a random-feature model.
+That the quantum features of Section~\ref{sec:sq4} behaved no better than
+classical random features in tree models is consistent with this reading.
 
 \subsection{What the Size Constraint Means in Practice}
-% Satellite AIS receivers, buoys, on-vessel hardware. Where an equal-size
-% comparison is legitimate, and where it is artificial.
+The quantum advantage of Section~\ref{sec:sq1} holds only when the classical
+model is restricted to the same size, depth and training schedule. No
+operational detector would impose that restriction, and without it gradient
+boosting outperforms every quantum model. The constraint is not wholly
+artificial: detectors running aboard satellites or buoys that receive AIS have
+tight memory and power budgets. Even there, however, the 71-parameter MLP
+matched the quantum networks, so the comparison favors quantum models only
+against twins trained under an identical schedule, not against small classical
+models in general.
 
 \subsection{Where Quantum Advantage Is Proven, and Why AIS Is Not There}
-% The ceiling: roughly a tenth of the theoretically possible advantage, and
-% narrowing as data grows. liu2021rigorous (structured data),
-% huang2022experiments (quantum-native data), huang2021information (polynomial
-% limits for classical data), tang2019quantum (dequantisation).
+Provable quantum advantages in learning rely on data with special structure or
+on data that are themselves quantum. Liu \textit{et al.}~\cite{liu2021rigorous}
+prove an advantage for a classification problem built on the discrete
+logarithm, and Huang \textit{et al.}~\cite{huang2022experiments} demonstrate one
+when the data come from quantum experiments. For classical data, Huang, Kueng
+and Preskill~\cite{huang2021information} show that quantum models can offer at
+most a polynomial advantage in sample complexity for average-case prediction,
+and Tang~\cite{tang2019quantum} showed that a claimed exponential quantum
+speed-up on classical data could be matched by a classical algorithm. AIS
+reports are classical, low-dimensional and without a known group structure. The
+measured geometric difference, about a tenth of its maximum and shrinking
+relative to it, is consistent with that picture.
 
 \subsection{Operational Significance}
-% The strongest quantum result lands on the most operationally meaningful attack
-% (transponder switch-off) -- under the size constraint, and still far behind
-% the tree ensembles on that attack.
+Two results bear on practice. The quantum networks' largest gain over their
+twins falls on transponder switch-off, the attack most associated with concealed
+activity at sea, but tree ensembles detect that attack far better. And the
+validation/test reversal in the quantum-feature experiment shows how easily a
+quantum advantage can be reported in error: random forest with quantum features
+appeared to beat every classical control on one set of vessels and lost to the
+plain model on another. Evaluating on held-out vessels against paired controls
+is what prevented that error.
 
 %----------------------------------------------------------------- limitations
 \section{Limitations}
 \label{sec:limitations}
-% WRITE (~500 words) as plain declarative sentences:
-%  - 8 qubits, one feature map, noiseless simulation, no hardware.
-%  - The forced 12->8 compression; the twin reads all 12.
-%  - No parameter-efficiency claim: a 71-parameter classical network matches
-%    the 106-161-parameter quantum models.
-%  - Injected rather than observed anomalies.
-%  - One day of US coastal AIS; no seasonal or geographic claim.
-%  - Tuning: 2 configurations for each HQNN and its twin; 9-12 for the classical
-%    baselines (favours classical -- state it).
-%  - MLP_frozen instability (seed standard deviation 0.059).
-%  - The test set was scored by several experiments; no setting was chosen on it.
-%  - Median imputation used statistics from all windows before the split.
-%  - The quantum kernel was not run at 2,857 windows; reported as not run.
-%  - No speed-up is claimed or measured.
+% DRAFT -- rewrite in your own words before submission.
+All quantum models used eight qubits, one encoding scheme per model family, and
+noiseless simulation; we report no results from quantum hardware, where noise
+would be expected to lower performance. Every HQNN compresses twelve features
+into eight through a classical layer, while its twin reads all twelve. We
+measured neither runtime nor parameter efficiency and claim no advantage in
+either; a 71-parameter classical network matched the 106--161-parameter quantum
+models.
+
+The anomalies were injected, not observed, and real manipulation may differ from
+the five attacks modeled here. The data cover a single day of United States
+coastal AIS, so we make no seasonal or geographic claim. Gradual drift, the
+largest attack class, was not solved by any model.
+
+The quantum models and their twins were tuned over two configurations each,
+whereas the classical baselines were tuned over 9--12, which favors the
+baselines. The twin of the frozen circuit was unstable across seeds, with a test
+AUC standard deviation of 0.059 at full data. The test set was scored by several
+experiments, although no setting was ever chosen on it. Median imputation of
+missing feature values used statistics computed over all windows before the
+split; no labels were involved. The robustness rebuilds of
+Appendix~\ref{app:repro} were run on an earlier, seven-feature version of the
+dataset. The QSVM was evaluated on validation data only, and only at 571 and
+1,429 windows.
 
 %----------------------------------------------------------------- future work
 \section{Future Work}
 \label{sec:future}
-% WRITE (~400 words), cheapest and most informative first:
-%  - Quantum natural gradient (stokes2020qng) to test the optimisation account.
-%  - 12+ qubits to remove the compression handicap.
-%  - Covariant kernels on the symmetries of vessel tracks (glick2024covariant).
-%  - Quantum-native sensor data, where advantage is actually proven
-%    (huang2022experiments).
-%  - A regime-switching hybrid detector: kernel when labels are few,
-%    variational once they accumulate.
+% DRAFT -- rewrite in your own words before submission.
+The most direct next experiment is to retrain the variational networks with the
+quantum natural gradient~\cite{stokes2020qng}, which accounts for the geometry
+of the quantum state space. If the scarce-data deficit is an optimization
+problem, it should narrow. A second is to use twelve or more qubits, removing the
+compression that the current networks require. Third, covariant quantum kernels,
+built around a symmetry group in the data~\cite{glick2024covariant}, could
+exploit the rotational and translational symmetries of vessel tracks, which the
+IQP feature map ignores. Fourth, quantum advantage is best supported when the
+data are themselves quantum~\cite{huang2022experiments}; quantum sensors being
+developed for navigation could eventually supply such data to maritime
+monitoring. Sequence models such as quantum long short-term memory
+networks~\cite{chen2022qlstm}, and tree-based quantum models such as quantum
+random forests~\cite{srikumar2024qrf}, were not tested here. Finally, the
+contrasting learning curves suggest a hybrid detector that uses a quantum kernel
+where confirmed anomalies are few and switches to other models as labels
+accumulate, although in our data simple classical models outperformed both in
+that regime.
 
 %------------------------------------------------------------------ conclusion
 \section{Conclusion}
 \label{sec:conclusion}
-% WRITE (~200 words). Answer the research question in its conditional form.
-% No new numbers, no new citations, no hedging.
+% DRAFT -- rewrite in your own words before submission.
+We asked under what conditions quantum machine learning models outperform
+classical models in detecting anomalous vessel behavior in AIS data. Against
+classical networks of equal size and depth, trained on identical data with the
+same number of optimization steps, hybrid quantum networks perform worse when
+labeled data are scarce and better when they are plentiful, with the crossover
+at a few thousand training windows. This is the opposite of what a common
+reading of quantum generalization bounds predicts, and our controls locate the
+cause in the training of variational circuits rather than in quantum feature
+maps. Against the classical models used in practice, no quantum model
+outperformed gradient boosting or random forest at any training-set size, and
+the room for any quantum-kernel advantage on these data is small. For maritime
+surveillance as it stands, quantum machine learning offers no practical
+advantage. The conditions under which it might, namely quantum-native data,
+feature maps built on the structure of the problem, and better optimizers for
+variational circuits, are what future work should test.
 
 %--------------------------------------------------------------------- backmatter
 \appendices
+
 \section{Feature Definitions}
-% All 12 features, from docs/METHODS.md.
+\label{app:features}
+Each feature is computed over one window of ten consecutive reports from a
+single voyage. Features marked $\dagger$ were added after an initial study showed
+that maximum-based features could not detect gradual trends.
+
+\begin{table}[!h]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{The twelve features}
+\label{tab:featdefs}
+\begin{tabular}{@{}p{0.34\columnwidth}p{0.6\columnwidth}@{}}
+\toprule
+Feature & Definition \\
+\midrule
+\texttt{sog\_mean} & Mean reported speed over ground \\
+\texttt{sog\_max\_jump} & Largest change in reported speed between consecutive reports \\
+\texttt{cog\_turn\_max} & Largest change in reported course between consecutive reports \\
+\texttt{dt\_max} & Longest interval between consecutive reports \\
+\texttt{spd\_mismatch\_max} & Largest absolute difference between implied and reported speed \\
+\texttt{crab\_mean} & Mean angle between reported course and reported heading \\
+\texttt{prev\_silence\_s} & Silence preceding the window's voyage \\
+\texttt{course\_resid\_mean}$^\dagger$ & Mean angle between reported course and the bearing travelled \\
+\texttt{mismatch\_slope}$^\dagger$ & Least-squares slope of the speed mismatch across the window \\
+\texttt{straightness}$^\dagger$ & Net displacement divided by path length \\
+\texttt{mismatch\_mean}$^\dagger$ & Mean absolute difference between implied and reported speed \\
+\texttt{crab\_valid} & 1 if heading was reported in the window, else 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Attack Injection Parameters}
-% From docs/INJECTION_AND_TIMELINE.md.
+\label{app:attacks}
+
+\begin{table}[!h]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Injected attacks. Severities are drawn uniformly from each range;
+medians are measured from the final dataset.}
+\label{tab:attackparams}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Attack & Range & Median & Voyages & Windows \\
+\midrule
+Speed falsification & $\times$1.8--5.0 & $\times$2.8 & 49 & 588 \\
+Position jump & 0.5--20~km & 9.8~km & 595 & 714 \\
+Reporting gap & 500--1,700~s & 1,093~s & 794 & 677 \\
+Transponder switch-off & 1--6~h & 3.6~h & 1,091 & 681 \\
+Gradual drift & 0.1--3~km & 1.3~km & 124 & 1,332 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Complete Results}
-% Point to docs/COMPLETE_RESULTS.md in the repository, or reproduce the full
-% grid here if the page limit allows.
+\label{app:results}
+Table~\ref{tab:testauc} gives test AUC for every model at every training-set
+size. Validation AUC, PR-AUC and per-attack AUC at every size, and every
+individual run, are available in the repository, together with the script that
+generates every table in this paper directly from the result files.
 
 \section{Reproducibility}
-% Repository, pinned versions, run times, the determinism check.
+\label{app:repro}
+\textit{Software.} Python 3.13, PennyLane 0.45.1~\cite{bergholm2018pennylane}
+with JAX 0.10.2 and Optax 0.2.8, scikit-learn 1.9.0~\cite{pedregosa2011sklearn}
+and NumPy 2.5.2~\cite{harris2020numpy}. Circuits were simulated on PennyLane's
+noiseless \texttt{default.qubit} device in 64-bit precision.
+
+\textit{Computation.} About 66~h on one laptop (22 CPU threads, 17~GB of
+memory): 11.1~h for the hyperparameter search and first scarcity sweep, 5.9~h
+for the ten-seed endpoint runs, 15.2~h for the full sweep, 30.8~h for the QSVM,
+and 2.8~h for the two follow-up experiments. The total model fits recorded in
+the result files is 1,222.
+
+\textit{Baseline tuning.} Gradient boosting: 12 configurations; random forest:
+9; logistic regression: 10; MLP: 12; isolation forest: 12; threshold rule: one
+per feature. Selected settings: gradient boosting with 100 iterations, depth 3
+and learning rate 0.05; random forest with 300 trees of depth 6; logistic
+regression with $C=0.01$ and balanced class weights; MLP with L2 penalty
+$10^{-4}$, learning rate 0.01 and positives oversampled to 20\%; isolation
+forest with 500 trees, 1,024 samples per tree and contamination 0.02; and a
+threshold on the maximum speed mismatch.
+
+\textit{Robustness.} Nine full rebuilds, on an earlier seven-feature version of
+the dataset, varied three thresholds. The under-way threshold (0.3, 0.5 and
+1.0~kn) was immaterial, changing detectability by at most 0.048 AUC. Window
+length (5, 10 and 20 reports) traded detection of gradual drift against
+detection of point events. The voyage-split threshold must be at least
+1,800~s, below which the reporting-gap attack splits voyages and disappears;
+above it, results changed by 0.004 AUC between 1,800 and 3,600~s.
+
+\textit{Availability.} The data are public~\cite{marinecadastre}. The code,
+pipeline, every result file and the source of this paper are at
+\url{https://github.com/AussAmerishFire/qml-ais-code}.
 
 \section{Corrections Log}
-% Every claim corrected during the study, with its original wording. Unusual,
-% and the appendix most likely to convince a careful reader of the rest.
+\label{app:corrections}
+Several intermediate claims were withdrawn during the study. We list them
+because each one shows a check that a reader can apply to the results above.
+\begin{itemize}
+  \item Labeling every window of an attacked voyage as anomalous left 85--90\%
+  of ``anomalous'' windows without an anomaly; windows are now labeled only if
+  they contain a modified report.
+  \item Matching quantum models to classical networks on parameter count alone
+  produced an apparent advantage that disappeared once depth was also matched.
+  \item Training for a fixed number of epochs gave small training sets about
+  120 times fewer updates; all neural models now train for 640 steps.
+  \item A claimed significant difference at five seeds was untestable, since a
+  five-pair Wilcoxon test cannot reach $p<0.05$; headline comparisons now use
+  ten seeds.
+  \item A claim that a label-free method outperformed every supervised model
+  with fewer than about 100 labeled anomalies was withdrawn once logistic
+  regression, which had not been run at small sizes, was found to match it.
+  \item A claim that freezing the quantum angles hurt small-data performance was
+  withdrawn: no difference was significant.
+  \item An MLP baseline described as unconstrained has 71 parameters, fewer than
+  any quantum model; it is described here accordingly.
+  \item Extrapolated values, one of which predicted an AUC above 1.0, were
+  removed. Every number reported here was measured.
+\end{itemize}
 
 \section*{Acknowledgment}
 % IEEE policy requires disclosing AI-generated content here, naming the system
-% and the sections it was used for. Check your school or competition rules too.
-% Edit this to describe what you actually used it for, e.g.:
-% "The author used Claude (Anthropic) to assist with software development, data
-% analysis and drafting parts of the text. The author reviewed, revised and
-% verified all content and takes full responsibility for it."
+% and how it was used. Check your school or competition rules too. Edit this
+% sentence so it describes exactly what you used it for.
+The author used Claude (Anthropic) to assist with software development, data
+analysis and drafting of the manuscript. The author reviewed, revised and
+verified all content and takes full responsibility for it.
 
-% DRAFT ONLY: \nocite{*} lists every entry in refs.bib so the reference list
-% renders before the prose cites anything (an empty list is a LaTeX error).
-% DELETE this line once the text has its \cite commands, so the final paper
-% lists only the references it actually cites.
-\nocite{*}
 \bibliographystyle{IEEEtran}
 \bibliography{refs}
 

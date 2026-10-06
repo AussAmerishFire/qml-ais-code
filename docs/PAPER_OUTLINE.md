@@ -198,7 +198,7 @@ contribution, not an embarrassment.
 **5.5 Detection by attack type** — **Figure 10** (`11_attack_detection`).
 Transponder switch-off +0.073 over the matched twin (p = 0.002); speed
 falsification 0.998, the study's highest single score; drift unsolved at
-0.61–0.66 for every model including a zero-parameter rule.
+0.61–0.66 for every supervised model (threshold rule 0.61, isolation forest 0.58).
 
 ---
 
